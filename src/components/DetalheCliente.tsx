@@ -12,7 +12,7 @@ import {
   Edit, 
   Save, 
   X,
-  Receipt
+  Shirt
 } from 'lucide-react';
 import {
   Dialog,
@@ -171,7 +171,7 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
       <div className="card-fashion p-6">
         <div className="flex items-center gap-3 mb-6">
           <div className="h-10 w-10 rounded-full bg-fashion-primary/20 flex items-center justify-center">
-            <Receipt size={18} className="text-fashion-dark" />
+            <Shirt size={18} className="text-fashion-dark" />
           </div>
           <div>
             <h2 className="text-xl font-serif font-medium">{cliente.nome}</h2>
@@ -385,7 +385,7 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
                           )}
                         </div>
                         <p className={`font-semibold ${
-                          transacao.tipo === 'adicao' ? 'text-gray-800' : 'text-green-700'
+                          transacao.tipo === 'adicao' ? 'text-red-600' : 'text-green-600'
                         }`}>
                           {transacao.tipo === 'adicao' ? '+' : '-'} {formatarMoeda(transacao.valor)}
                         </p>

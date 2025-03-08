@@ -9,7 +9,7 @@ interface ClienteContextType {
   estatisticas: EstatisticasGerais;
   filtroNome: string;
   setFiltroNome: (filtro: string) => void;
-  adicionarCliente: (nome: string, valorNota: number) => void;
+  adicionarCliente: (nome: string, valorNota: number) => string | undefined;
   removerCliente: (id: string) => void;
   adicionarValorNota: (clienteId: string, valor: number, descricao?: string) => void;
   registrarPagamento: (clienteId: string, valor: number, descricao?: string) => void;
@@ -85,11 +85,12 @@ export const ClienteProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const adicionarCliente = (nome: string, valorNota: number) => {
     if (!nome || valorNota <= 0) {
       toast.error("Por favor, preencha o nome e um valor válido.");
-      return;
+      return undefined;
     }
     
+    const novoClienteId = uuidv4();
     const novoCliente: Cliente = {
-      id: uuidv4(),
+      id: novoClienteId,
       nome,
       totalNota: valorNota,
       valorPendente: valorNota,
@@ -107,6 +108,8 @@ export const ClienteProvider: React.FC<{ children: React.ReactNode }> = ({ child
     
     setClientes(prevClientes => [...prevClientes, novoCliente]);
     toast.success(`Cliente ${nome} adicionado com sucesso!`);
+    
+    return novoClienteId;
   };
   
   // Remover um cliente

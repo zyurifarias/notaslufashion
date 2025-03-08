@@ -75,17 +75,22 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-gradient-to-br from-fashion-light via-fashion-primary/10 to-fashion-secondary/20 min-h-screen text-foreground font-sans;
   }
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-serif;
   }
+  
+  /* Use the sans font for all regular text */
+  p, span, div, button, input, label {
+    @apply font-sans;
+  }
 }
 
 @layer components {
   .card-fashion {
-    @apply bg-white rounded-xl shadow-md border border-fashion-primary/20 transition-all duration-300 hover:shadow-lg overflow-hidden;
+    @apply bg-white/90 backdrop-blur-sm rounded-xl shadow-md border border-fashion-primary/20 transition-all duration-300 hover:shadow-lg overflow-hidden;
   }
 
   .input-fashion {

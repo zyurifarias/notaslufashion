@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useClientes } from '@/contexts/ClienteContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +11,7 @@ const NovoClienteForm: React.FC = () => {
   const [nome, setNome] = useState('');
   const [valorNota, setValorNota] = useState('');
   const { adicionarCliente } = useClientes();
+  const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,11 +23,16 @@ const NovoClienteForm: React.FC = () => {
       return; // Validação feita no contexto
     }
     
-    adicionarCliente(nome.trim(), valor);
+    const novoClienteId = adicionarCliente(nome.trim(), valor);
     
     // Limpar formulário
     setNome('');
     setValorNota('');
+    
+    // Redirecionar para a página de gerenciamento do cliente
+    if (novoClienteId) {
+      navigate(`/cliente/${novoClienteId}`);
+    }
   };
 
   return (
