@@ -10,28 +10,37 @@ import { UserPlus } from 'lucide-react';
 const NovoClienteForm: React.FC = () => {
   const [nome, setNome] = useState('');
   const [valorNota, setValorNota] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const { adicionarCliente } = useClientes();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     
     // Converter para número e verificar se é válido
     const valor = parseFloat(valorNota.replace(',', '.'));
     
     if (!nome.trim()) {
+      setIsLoading(false);
       return; // Validação feita no contexto
     }
     
-    const novoClienteId = adicionarCliente(nome.trim(), valor);
-    
-    // Limpar formulário
-    setNome('');
-    setValorNota('');
-    
-    // Redirecionar para a página de gerenciamento do cliente
-    if (novoClienteId) {
-      navigate(`/cliente/${novoClienteId}`);
+    try {
+      const novoClienteId = await adicionarCliente(nome.trim(), valor);
+      
+      // Limpar formulário
+      setNome('');
+      setValorNota('');
+      
+      // Redirecionar para a página de gerenciamento do cliente
+      if (novoClienteId) {
+        navigate(`/cliente/${novoClienteId}`);
+      }
+    } catch (error) {
+      console.error("Erro ao adicionar cliente:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -81,8 +90,9 @@ const NovoClienteForm: React.FC = () => {
         <Button 
           type="submit" 
           className="w-full mt-4 btn-fashion-primary"
+          disabled={isLoading}
         >
-          Criar Nova Nota
+          {isLoading ? 'Criando...' : 'Criar Nova Nota'}
         </Button>
       </div>
     </form>

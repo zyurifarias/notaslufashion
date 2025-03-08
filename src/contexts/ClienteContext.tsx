@@ -11,7 +11,7 @@ interface ClienteContextType {
   estatisticas: EstatisticasGerais;
   filtroNome: string;
   setFiltroNome: (filtro: string) => void;
-  adicionarCliente: (nome: string, valorNota: number) => string | undefined;
+  adicionarCliente: (nome: string, valorNota: number) => Promise<string | undefined>; // Alterado para Promise<string | undefined>
   removerCliente: (id: string) => void;
   adicionarValorNota: (clienteId: string, valor: number, descricao?: string) => void;
   registrarPagamento: (clienteId: string, valor: number, descricao?: string) => void;
