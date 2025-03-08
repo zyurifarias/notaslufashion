@@ -1,8 +1,7 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Cliente, Transacao, EstatisticasGerais } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
-import { toast } from '@/components/ui/sonner';
+import { toast } from 'sonner';
 
 // Definição do contexto
 interface ClienteContextType {
