@@ -1,11 +1,40 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import React from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import Header from '@/components/Header';
+import EstatisticasCard from '@/components/EstatisticasCard';
+import ListaClientes from '@/components/ListaClientes';
+import NovoClienteForm from '@/components/NovoClienteForm';
+import { Users, Receipt } from 'lucide-react';
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
+    <div className="container mx-auto py-6 px-4 max-w-4xl">
+      <Header />
+      
+      <div className="mt-6">
+        <EstatisticasCard />
+        
+        <Tabs defaultValue="clientes" className="w-full">
+          <TabsList className="mb-6 grid w-full grid-cols-2">
+            <TabsTrigger value="clientes" className="flex items-center gap-2 data-[state=active]:bg-fashion-primary/20">
+              <Users size={16} />
+              Clientes
+            </TabsTrigger>
+            <TabsTrigger value="nova-nota" className="flex items-center gap-2 data-[state=active]:bg-fashion-primary/20">
+              <Receipt size={16} />
+              Nova Nota
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="clientes">
+            <ListaClientes />
+          </TabsContent>
+          
+          <TabsContent value="nova-nota">
+            <NovoClienteForm />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
