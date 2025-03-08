@@ -41,7 +41,7 @@ const NovoClienteForm: React.FC = () => {
         <div className="bg-fashion-primary/20 p-2 rounded-full">
           <UserPlus size={20} className="text-fashion-dark" />
         </div>
-        <h2 className="text-lg font-serif font-medium">Nova Nota</h2>
+        <h2 className="text-lg font-sans font-medium">Nova Nota</h2>
       </div>
       
       <div className="space-y-4">

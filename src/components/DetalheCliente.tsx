@@ -11,7 +11,7 @@ import {
   Edit, 
   Save, 
   X,
-  Shirt
+  ShoppingBag
 } from 'lucide-react';
 import {
   Dialog,
@@ -169,7 +169,7 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
       <div className="card-fashion p-6">
         <div className="flex items-center gap-3 mb-6">
           <div className="h-10 w-10 rounded-full bg-fashion-primary/20 flex items-center justify-center">
-            <Shirt size={18} className="text-fashion-dark" />
+            <ShoppingBag size={18} className="text-fashion-dark" />
           </div>
           <div>
             <h2 className="text-xl font-sans font-medium">{cliente.nome}</h2>

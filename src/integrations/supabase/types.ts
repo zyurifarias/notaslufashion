@@ -11,118 +11,63 @@ export type Database = {
     Tables: {
       clientes: {
         Row: {
-          data_criacao: string
-          id_cliente: number
+          criado_em: string
+          id: string
           nome: string
+          total_nota: number
+          valor_abatido: number
           valor_pendente: number
-          valor_total: number
         }
         Insert: {
-          data_criacao?: string
-          id_cliente?: number
+          criado_em?: string
+          id?: string
           nome: string
+          total_nota?: number
+          valor_abatido?: number
           valor_pendente?: number
-          valor_total?: number
         }
         Update: {
-          data_criacao?: string
-          id_cliente?: number
+          criado_em?: string
+          id?: string
           nome?: string
+          total_nota?: number
+          valor_abatido?: number
           valor_pendente?: number
-          valor_total?: number
         }
         Relationships: []
       }
-      logs_transacoes: {
+      transacoes: {
         Row: {
+          cliente_id: string
           data_transacao: string
-          id_log: number
-          id_nota: number
-          tipo_transacao: string
+          descricao: string | null
+          id: string
+          tipo: string
           valor: number
         }
         Insert: {
+          cliente_id: string
           data_transacao?: string
-          id_log?: number
-          id_nota: number
-          tipo_transacao: string
-          valor?: number
+          descricao?: string | null
+          id?: string
+          tipo: string
+          valor: number
         }
         Update: {
+          cliente_id?: string
           data_transacao?: string
-          id_log?: number
-          id_nota?: number
-          tipo_transacao?: string
+          descricao?: string | null
+          id?: string
+          tipo?: string
           valor?: number
         }
         Relationships: [
           {
-            foreignKeyName: "logs_transacoes_id_nota_fkey"
-            columns: ["id_nota"]
-            isOneToOne: false
-            referencedRelation: "notas"
-            referencedColumns: ["id_nota"]
-          },
-        ]
-      }
-      notas: {
-        Row: {
-          data_criacao: string
-          id_cliente: number
-          id_nota: number
-          valor_nota: number
-        }
-        Insert: {
-          data_criacao?: string
-          id_cliente: number
-          id_nota?: number
-          valor_nota?: number
-        }
-        Update: {
-          data_criacao?: string
-          id_cliente?: number
-          id_nota?: number
-          valor_nota?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "notas_id_cliente_fkey"
-            columns: ["id_cliente"]
+            foreignKeyName: "transacoes_cliente_id_fkey"
+            columns: ["cliente_id"]
             isOneToOne: false
             referencedRelation: "clientes"
-            referencedColumns: ["id_cliente"]
-          },
-        ]
-      }
-      pagamentos: {
-        Row: {
-          data_pagamento: string
-          id_nota: number
-          id_pagamento: number
-          tipo_pagamento: string
-          valor_pagamento: number
-        }
-        Insert: {
-          data_pagamento?: string
-          id_nota: number
-          id_pagamento?: number
-          tipo_pagamento: string
-          valor_pagamento?: number
-        }
-        Update: {
-          data_pagamento?: string
-          id_nota?: number
-          id_pagamento?: number
-          tipo_pagamento?: string
-          valor_pagamento?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "pagamentos_id_nota_fkey"
-            columns: ["id_nota"]
-            isOneToOne: false
-            referencedRelation: "notas"
-            referencedColumns: ["id_nota"]
+            referencedColumns: ["id"]
           },
         ]
       }
