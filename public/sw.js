@@ -1,45 +1,61 @@
 
-// This is the service worker with the combined offline experience
-const CACHE = "LuFashion-v1";
+// Service Worker para LuFashion PWA
+const CACHE_NAME = "lufashion-cache-v1";
+const urlsToCache = [
+  "/",
+  "/index.html",
+  "/manifest.json",
+  "/favicon.ico",
+  "/logo192.png",
+  "/logo512.png"
+];
 
-const offlineFallbackPage = "index.html";
-
+// Instalação do service worker
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE).then((cache) => {
-      return cache.add(offlineFallbackPage);
+    caches.open(CACHE_NAME).then((cache) => {
+      console.log("Cache aberto");
+      return cache.addAll(urlsToCache);
     })
   );
 });
 
+// Estratégia de cache: network first, fallback para cache
 self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") return;
-
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        event.waitUntil(updateCache(event.request, response.clone()));
+        // Se a resposta for válida, clonar e armazenar no cache
+        if (!response || response.status !== 200 || response.type !== "basic") {
+          return response;
+        }
+
+        const responseToCache = response.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, responseToCache);
+        });
+
         return response;
       })
-      .catch((error) => {
-        return fromCache(event.request);
+      .catch(() => {
+        // Se falhar, tenta retornar do cache
+        return caches.match(event.request);
       })
   );
 });
 
-function fromCache(request) {
-  return caches.open(CACHE).then((cache) => {
-    return cache.match(request).then((matching) => {
-      if (!matching || matching.status === 404) {
-        return Promise.reject("no-match");
-      }
-      return matching;
-    });
-  });
-}
-
-function updateCache(request, response) {
-  return caches.open(CACHE).then((cache) => {
-    return cache.put(request, response);
-  });
-}
+// Limpar caches antigos quando uma nova versão do SW for ativada
+self.addEventListener("activate", (event) => {
+  const cacheWhitelist = [CACHE_NAME];
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheWhitelist.indexOf(cacheName) === -1) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
+});

@@ -2,6 +2,7 @@
 {
   "short_name": "LuFashion",
   "name": "LuFashion - Gerenciador de Notas",
+  "description": "Aplicativo para gerenciamento de notas de loja de roupas femininas",
   "icons": [
     {
       "src": "favicon.ico",
@@ -11,16 +12,22 @@
     {
       "src": "logo192.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any maskable"
     },
     {
       "src": "logo512.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any maskable"
     }
   ],
-  "start_url": ".",
+  "start_url": "/",
+  "id": "/",
   "display": "standalone",
   "theme_color": "#c76e91",
-  "background_color": "#ffffff"
+  "background_color": "#ffffff",
+  "orientation": "portrait",
+  "scope": "/",
+  "prefer_related_applications": false
 }

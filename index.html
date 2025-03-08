@@ -4,12 +4,15 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>LuFashion - Gerenciador de Notas</title>
     <meta name="description" content="Aplicativo para gerenciamento de notas de loja de roupas femininas" />
     <link rel="apple-touch-icon" href="/logo192.png" />
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#c76e91" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="LuFashion" />
   </head>
   <body>
     <div id="root"></div>
@@ -18,13 +21,21 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
-          navigator.serviceWorker.register('/sw.js').then(function(registration) {
-            console.log('ServiceWorker registration successful with scope: ', registration.scope);
-          }, function(err) {
-            console.log('ServiceWorker registration failed: ', err);
-          });
+          navigator.serviceWorker.register('/sw.js')
+            .then(function(registration) {
+              console.log('ServiceWorker registrado com sucesso: ', registration.scope);
+            })
+            .catch(function(error) {
+              console.error('Falha ao registrar o ServiceWorker: ', error);
+            });
         });
       }
     </script>
+    <!-- Noscript fallback -->
+    <noscript>
+      <div style="padding: 20px; text-align: center;">
+        Você precisa habilitar o JavaScript para executar este aplicativo.
+      </div>
+    </noscript>
   </body>
 </html>
