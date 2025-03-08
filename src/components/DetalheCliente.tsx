@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useClientes } from '@/contexts/ClienteContext';
@@ -12,7 +11,7 @@ import {
   Edit, 
   Save, 
   X,
-  Dress
+  Shirt
 } from 'lucide-react';
 import {
   Dialog,
@@ -57,7 +56,6 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
   const [valorPagamento, setValorPagamento] = useState('');
   const [descricaoPagamento, setDescricaoPagamento] = useState('');
   
-  // Estados para edição de transação
   const [transacaoEditando, setTransacaoEditando] = useState<string | null>(null);
   const [valorEditando, setValorEditando] = useState('');
   const [descricaoEditando, setDescricaoEditando] = useState('');
@@ -171,7 +169,7 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
       <div className="card-fashion p-6">
         <div className="flex items-center gap-3 mb-6">
           <div className="h-10 w-10 rounded-full bg-fashion-primary/20 flex items-center justify-center">
-            <Dress size={18} className="text-fashion-dark" />
+            <Shirt size={18} className="text-fashion-dark" />
           </div>
           <div>
             <h2 className="text-xl font-sans font-medium">{cliente.nome}</h2>
