@@ -43,7 +43,7 @@ const ListaClientes: React.FC = () => {
                     <User size={18} className="text-fashion-dark" />
                   </div>
                   <div>
-                    <h3 className="font-medium text-gray-800">{cliente.nome}</h3>
+                    <h3 className="font-sans font-medium text-gray-800">{cliente.nome}</h3>
                     <div className="flex gap-2 text-xs text-gray-500">
                       <span>Total: {formatarMoeda(cliente.totalNota)}</span>
                       <span>•</span>

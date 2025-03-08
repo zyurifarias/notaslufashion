@@ -75,7 +75,8 @@
   }
 
   body {
-    @apply bg-gradient-to-br from-fashion-light via-fashion-primary/10 to-fashion-secondary/20 min-h-screen text-foreground font-sans;
+    @apply bg-gradient-to-br from-[#c76e91]/40 via-[#c76e91]/20 to-[#c76e91]/10 min-h-screen text-foreground font-sans;
+    background-attachment: fixed;
   }
 
   h1, h2, h3, h4, h5, h6 {

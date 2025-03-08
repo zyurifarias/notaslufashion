@@ -70,6 +70,7 @@ export default {
 					accent: '#F2D4D7', // Rosa pálido
 					light: '#F9F5F6', // Off-white
 					dark: '#8A7F8D', // Cinza lilás escuro
+					rose: '#c76e91', // Nova cor rosa
 				}
 			},
 			borderRadius: {

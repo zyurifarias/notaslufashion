@@ -9,7 +9,123 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      clientes: {
+        Row: {
+          data_criacao: string
+          id_cliente: number
+          nome: string
+          valor_pendente: number
+          valor_total: number
+        }
+        Insert: {
+          data_criacao?: string
+          id_cliente?: number
+          nome: string
+          valor_pendente?: number
+          valor_total?: number
+        }
+        Update: {
+          data_criacao?: string
+          id_cliente?: number
+          nome?: string
+          valor_pendente?: number
+          valor_total?: number
+        }
+        Relationships: []
+      }
+      logs_transacoes: {
+        Row: {
+          data_transacao: string
+          id_log: number
+          id_nota: number
+          tipo_transacao: string
+          valor: number
+        }
+        Insert: {
+          data_transacao?: string
+          id_log?: number
+          id_nota: number
+          tipo_transacao: string
+          valor?: number
+        }
+        Update: {
+          data_transacao?: string
+          id_log?: number
+          id_nota?: number
+          tipo_transacao?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "logs_transacoes_id_nota_fkey"
+            columns: ["id_nota"]
+            isOneToOne: false
+            referencedRelation: "notas"
+            referencedColumns: ["id_nota"]
+          },
+        ]
+      }
+      notas: {
+        Row: {
+          data_criacao: string
+          id_cliente: number
+          id_nota: number
+          valor_nota: number
+        }
+        Insert: {
+          data_criacao?: string
+          id_cliente: number
+          id_nota?: number
+          valor_nota?: number
+        }
+        Update: {
+          data_criacao?: string
+          id_cliente?: number
+          id_nota?: number
+          valor_nota?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notas_id_cliente_fkey"
+            columns: ["id_cliente"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id_cliente"]
+          },
+        ]
+      }
+      pagamentos: {
+        Row: {
+          data_pagamento: string
+          id_nota: number
+          id_pagamento: number
+          tipo_pagamento: string
+          valor_pagamento: number
+        }
+        Insert: {
+          data_pagamento?: string
+          id_nota: number
+          id_pagamento?: number
+          tipo_pagamento: string
+          valor_pagamento?: number
+        }
+        Update: {
+          data_pagamento?: string
+          id_nota?: number
+          id_pagamento?: number
+          tipo_pagamento?: string
+          valor_pagamento?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pagamentos_id_nota_fkey"
+            columns: ["id_nota"]
+            isOneToOne: false
+            referencedRelation: "notas"
+            referencedColumns: ["id_nota"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
