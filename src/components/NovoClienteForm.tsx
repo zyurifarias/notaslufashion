@@ -5,11 +5,22 @@ import { useClientes } from '@/contexts/ClienteContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, Calendar as CalendarIcon, Phone } from 'lucide-react';
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 const NovoClienteForm: React.FC = () => {
   const [nome, setNome] = useState('');
   const [valorNota, setValorNota] = useState('');
+  const [telefone, setTelefone] = useState('');
+  const [dataVencimento, setDataVencimento] = useState<Date>(new Date());
   const [isLoading, setIsLoading] = useState(false);
   const { adicionarCliente } = useClientes();
   const navigate = useNavigate();
@@ -27,11 +38,13 @@ const NovoClienteForm: React.FC = () => {
     }
     
     try {
-      const novoClienteId = await adicionarCliente(nome.trim(), valor);
+      const novoClienteId = await adicionarCliente(nome.trim(), valor, dataVencimento, telefone);
       
       // Limpar formulário
       setNome('');
       setValorNota('');
+      setTelefone('');
+      setDataVencimento(new Date());
       
       // Redirecionar para a página de gerenciamento do cliente
       if (novoClienteId) {
@@ -41,6 +54,37 @@ const NovoClienteForm: React.FC = () => {
       console.error("Erro ao adicionar cliente:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Função para formatar telefone: (99) 99999-9999
+  const formatarTelefone = (value: string) => {
+    const numbers = value.replace(/\D/g, '');
+    
+    if (numbers.length <= 11) {
+      let formatted = numbers;
+      
+      if (numbers.length > 2) {
+        formatted = `(${numbers.substring(0, 2)}) ${numbers.substring(2)}`;
+      }
+      
+      if (numbers.length > 7) {
+        formatted = `(${numbers.substring(0, 2)}) ${numbers.substring(2, 7)}-${numbers.substring(7)}`;
+      }
+      
+      return formatted;
+    }
+    
+    return value;
+  };
+
+  const handleTelefoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target.value;
+    // Remover todos os caracteres que não são números
+    const numbersOnly = input.replace(/\D/g, '');
+    
+    if (numbersOnly.length <= 11) {
+      setTelefone(formatarTelefone(numbersOnly));
     }
   };
 
@@ -68,6 +112,22 @@ const NovoClienteForm: React.FC = () => {
         </div>
         
         <div className="space-y-2">
+          <Label htmlFor="telefone">Telefone</Label>
+          <div className="relative">
+            <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={16} />
+            <Input
+              id="telefone"
+              type="text"
+              value={telefone}
+              onChange={handleTelefoneChange}
+              placeholder="(99) 99999-9999"
+              className="pl-10 input-fashion"
+            />
+          </div>
+          <p className="text-xs text-gray-500">Formato: (99) 99999-9999</p>
+        </div>
+        
+        <div className="space-y-2">
           <Label htmlFor="valor">Valor da Nota</Label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">R$</span>
@@ -85,6 +145,39 @@ const NovoClienteForm: React.FC = () => {
               required
             />
           </div>
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="dataVencimento">Data de Vencimento</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                id="dataVencimento"
+                variant="outline"
+                className={cn(
+                  "w-full justify-start text-left font-normal input-fashion",
+                  !dataVencimento && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dataVencimento ? (
+                  format(dataVencimento, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
+                ) : (
+                  <span>Selecione uma data</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={dataVencimento}
+                onSelect={(date) => date && setDataVencimento(date)}
+                initialFocus
+                locale={ptBR}
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
         </div>
         
         <Button 

@@ -1,8 +1,18 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useClientes } from '@/contexts/ClienteContext';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 import { 
   ArrowLeft, 
   Plus, 
@@ -11,7 +21,10 @@ import {
   Edit, 
   Save, 
   X,
-  ShoppingBag
+  ShoppingBag,
+  Calendar as CalendarIcon,
+  Phone,
+  MessageSquare
 } from 'lucide-react';
 import {
   Dialog,
@@ -45,7 +58,9 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
     adicionarValorNota, 
     registrarPagamento,
     editarTransacao,
-    removerTransacao
+    removerTransacao,
+    atualizarDataVencimento,
+    atualizarTelefone
   } = useClientes();
   const navigate = useNavigate();
   
@@ -53,12 +68,21 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
   
   const [valorAdicao, setValorAdicao] = useState('');
   const [descricaoAdicao, setDescricaoAdicao] = useState('');
+  const [dataVencimentoAdicao, setDataVencimentoAdicao] = useState<Date | undefined>(undefined);
+  
   const [valorPagamento, setValorPagamento] = useState('');
   const [descricaoPagamento, setDescricaoPagamento] = useState('');
+  const [dataVencimentoPagamento, setDataVencimentoPagamento] = useState<Date | undefined>(undefined);
   
   const [transacaoEditando, setTransacaoEditando] = useState<string | null>(null);
   const [valorEditando, setValorEditando] = useState('');
   const [descricaoEditando, setDescricaoEditando] = useState('');
+  
+  const [editandoTelefone, setEditandoTelefone] = useState(false);
+  const [novoTelefone, setNovoTelefone] = useState('');
+  
+  const [editandoDataVencimento, setEditandoDataVencimento] = useState(false);
+  const [novaDataVencimento, setNovaDataVencimento] = useState<Date | undefined>(undefined);
   
   if (!cliente) {
     return (
@@ -84,25 +108,23 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
   };
   
   const formatarData = (data: Date) => {
-    return new Date(data).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    });
+    return format(data, "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
   };
   
   const handleAdicionarValor = () => {
     const valor = parseFloat(valorAdicao.replace(',', '.'));
-    adicionarValorNota(clienteId, valor, descricaoAdicao);
+    adicionarValorNota(clienteId, valor, descricaoAdicao, dataVencimentoAdicao);
     setValorAdicao('');
     setDescricaoAdicao('');
+    setDataVencimentoAdicao(undefined);
   };
   
   const handleRegistrarPagamento = () => {
     const valor = parseFloat(valorPagamento.replace(',', '.'));
-    registrarPagamento(clienteId, valor, descricaoPagamento);
+    registrarPagamento(clienteId, valor, descricaoPagamento, dataVencimentoPagamento);
     setValorPagamento('');
     setDescricaoPagamento('');
+    setDataVencimentoPagamento(undefined);
   };
   
   const iniciarEdicao = (transacao: { id: string, valor: number, descricao?: string }) => {
@@ -121,6 +143,74 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
     setTransacaoEditando(null);
     setValorEditando('');
     setDescricaoEditando('');
+  };
+  
+  const handleSalvarTelefone = () => {
+    if (novoTelefone.trim()) {
+      atualizarTelefone(clienteId, novoTelefone);
+    }
+    setEditandoTelefone(false);
+  };
+  
+  const handleSalvarDataVencimento = () => {
+    if (novaDataVencimento) {
+      atualizarDataVencimento(clienteId, novaDataVencimento);
+    }
+    setEditandoDataVencimento(false);
+  };
+  
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  
+  const dataVencimento = cliente.dataVencimento ? new Date(cliente.dataVencimento) : new Date();
+  dataVencimento.setHours(0, 0, 0, 0);
+  
+  const isVencida = dataVencimento < hoje && cliente.valorPendente > 0;
+  
+  // Formatar telefone: (99) 99999-9999
+  const formatarTelefone = (value: string) => {
+    if (!value) return '';
+    
+    const numbers = value.replace(/\D/g, '');
+    
+    if (numbers.length <= 11) {
+      let formatted = numbers;
+      
+      if (numbers.length > 2) {
+        formatted = `(${numbers.substring(0, 2)}) ${numbers.substring(2)}`;
+      }
+      
+      if (numbers.length > 7) {
+        formatted = `(${numbers.substring(0, 2)}) ${numbers.substring(2, 7)}-${numbers.substring(7)}`;
+      }
+      
+      return formatted;
+    }
+    
+    return value;
+  };
+  
+  const handleTelefoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target.value;
+    // Remover todos os caracteres que não são números
+    const numbersOnly = input.replace(/\D/g, '');
+    
+    if (numbersOnly.length <= 11) {
+      setNovoTelefone(formatarTelefone(numbersOnly));
+    }
+  };
+  
+  // Obter número para WhatsApp (apenas dígitos)
+  const getWhatsAppNumber = () => {
+    if (!cliente.telefone) return '';
+    return cliente.telefone.replace(/\D/g, '');
+  };
+  
+  // Link para WhatsApp
+  const getWhatsAppLink = () => {
+    const phoneNumber = getWhatsAppNumber();
+    if (!phoneNumber) return '#';
+    return `https://wa.me/55${phoneNumber}?text=Olá,%20sua%20nota%20venceu.`;
   };
   
   return (
@@ -179,6 +269,134 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
           </div>
         </div>
         
+        <div className="space-y-4 mb-6">
+          {/* Telefone do Cliente */}
+          <div className="card-fashion p-4 bg-fashion-light">
+            <div className="flex justify-between items-center">
+              <div className="space-y-1">
+                <p className="text-sm text-gray-500">Telefone</p>
+                {editandoTelefone ? (
+                  <div className="flex items-center gap-2">
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={16} />
+                      <Input
+                        type="text"
+                        value={novoTelefone}
+                        onChange={handleTelefoneChange}
+                        placeholder="(99) 99999-9999"
+                        className="pl-10 input-fashion w-40"
+                      />
+                    </div>
+                    <button 
+                      onClick={handleSalvarTelefone}
+                      className="text-green-600 hover:text-green-700 p-1"
+                    >
+                      <Save size={16} />
+                    </button>
+                    <button 
+                      onClick={() => setEditandoTelefone(false)}
+                      className="text-gray-500 hover:text-gray-700 p-1"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <p className="text-lg font-medium">{cliente.telefone ? formatarTelefone(cliente.telefone) : 'Não informado'}</p>
+                    <button 
+                      onClick={() => {
+                        setNovoTelefone(cliente.telefone || '');
+                        setEditandoTelefone(true);
+                      }}
+                      className="text-fashion-dark/70 hover:text-fashion-dark p-1"
+                    >
+                      <Edit size={16} />
+                    </button>
+                    {cliente.telefone && (
+                      <a 
+                        href={getWhatsAppLink()} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-green-600 hover:text-green-700 p-1"
+                        aria-label="Enviar mensagem no WhatsApp"
+                      >
+                        <MessageSquare size={16} />
+                      </a>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          
+          {/* Data de Vencimento */}
+          <div className={`card-fashion p-4 ${isVencida ? 'bg-red-50 border-red-200' : 'bg-fashion-light'}`}>
+            <div className="flex justify-between items-center">
+              <div className="space-y-1">
+                <p className="text-sm text-gray-500">Data de Vencimento</p>
+                {editandoDataVencimento ? (
+                  <div className="flex items-center gap-2">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-[240px] justify-start text-left font-normal input-fashion"
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {novaDataVencimento ? (
+                            format(novaDataVencimento, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
+                          ) : (
+                            <span>Selecione uma data</span>
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={novaDataVencimento}
+                          onSelect={(date) => date && setNovaDataVencimento(date)}
+                          initialFocus
+                          locale={ptBR}
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <button 
+                      onClick={handleSalvarDataVencimento}
+                      className="text-green-600 hover:text-green-700 p-1"
+                      disabled={!novaDataVencimento}
+                    >
+                      <Save size={16} />
+                    </button>
+                    <button 
+                      onClick={() => setEditandoDataVencimento(false)}
+                      className="text-gray-500 hover:text-gray-700 p-1"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <p className={`text-lg font-medium ${isVencida ? 'text-red-600' : ''}`}>
+                      {cliente.dataVencimento ? formatarData(cliente.dataVencimento) : 'Não definida'}
+                      {isVencida && ' (VENCIDA)'}
+                    </p>
+                    <button 
+                      onClick={() => {
+                        setNovaDataVencimento(cliente.dataVencimento || new Date());
+                        setEditandoDataVencimento(true);
+                      }}
+                      className="text-fashion-dark/70 hover:text-fashion-dark p-1"
+                    >
+                      <Edit size={16} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div className="card-fashion p-4 bg-fashion-light">
             <p className="text-sm text-gray-500 mb-1">Valor Total da Nota</p>
@@ -229,6 +447,37 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
                     placeholder="Ex: Nova peça"
                     className="input-fashion"
                   />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Nova Data de Vencimento (opcional)</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal input-fashion",
+                          !dataVencimentoAdicao && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {dataVencimentoAdicao ? (
+                          format(dataVencimentoAdicao, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
+                        ) : (
+                          <span>Manter a data atual</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={dataVencimentoAdicao}
+                        onSelect={(date) => setDataVencimentoAdicao(date)}
+                        initialFocus
+                        locale={ptBR}
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
               <DialogFooter>
@@ -285,6 +534,37 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
                     placeholder="Ex: Pagamento parcial"
                     className="input-fashion"
                   />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Nova Data de Vencimento (opcional)</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal input-fashion",
+                          !dataVencimentoPagamento && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {dataVencimentoPagamento ? (
+                          format(dataVencimentoPagamento, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
+                        ) : (
+                          <span>Manter a data atual</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={dataVencimentoPagamento}
+                        onSelect={(date) => setDataVencimentoPagamento(date)}
+                        initialFocus
+                        locale={ptBR}
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
               <DialogFooter>

@@ -12,24 +12,30 @@ export type Database = {
       clientes: {
         Row: {
           criado_em: string
+          data_vencimento: string | null
           id: string
           nome: string
+          telefone: string | null
           total_nota: number
           valor_abatido: number
           valor_pendente: number
         }
         Insert: {
           criado_em?: string
+          data_vencimento?: string | null
           id?: string
           nome: string
+          telefone?: string | null
           total_nota?: number
           valor_abatido?: number
           valor_pendente?: number
         }
         Update: {
           criado_em?: string
+          data_vencimento?: string | null
           id?: string
           nome?: string
+          telefone?: string | null
           total_nota?: number
           valor_abatido?: number
           valor_pendente?: number

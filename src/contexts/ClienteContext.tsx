@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Cliente, Transacao, EstatisticasGerais } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
@@ -11,14 +10,17 @@ interface ClienteContextType {
   estatisticas: EstatisticasGerais;
   filtroNome: string;
   setFiltroNome: (filtro: string) => void;
-  adicionarCliente: (nome: string, valorNota: number) => Promise<string | undefined>; // Alterado para Promise<string | undefined>
+  adicionarCliente: (nome: string, valorNota: number, dataVencimento?: Date, telefone?: string) => Promise<string | undefined>; 
   removerCliente: (id: string) => void;
-  adicionarValorNota: (clienteId: string, valor: number, descricao?: string) => void;
-  registrarPagamento: (clienteId: string, valor: number, descricao?: string) => void;
+  adicionarValorNota: (clienteId: string, valor: number, descricao?: string, novaDataVencimento?: Date) => void;
+  registrarPagamento: (clienteId: string, valor: number, descricao?: string, novaDataVencimento?: Date) => void;
   editarTransacao: (clienteId: string, transacaoId: string, novoValor: number, novaDescricao?: string) => void;
   removerTransacao: (clienteId: string, transacaoId: string) => void;
   getClienteById: (id: string) => Cliente | undefined;
   clientesFiltrados: Cliente[];
+  atualizarDataVencimento: (clienteId: string, novaDataVencimento: Date) => void;
+  atualizarTelefone: (clienteId: string, novoTelefone: string) => void;
+  clientesVencidos: Cliente[];
 }
 
 // Criação do contexto
@@ -83,7 +85,9 @@ export const ClienteProvider: React.FC<{ children: React.ReactNode }> = ({ child
             totalNota: cliente.total_nota,
             valorPendente: cliente.valor_pendente,
             valorAbatido: cliente.valor_abatido,
-            transacoes: transacoesFormatadas
+            transacoes: transacoesFormatadas,
+            dataVencimento: cliente.data_vencimento ? new Date(cliente.data_vencimento) : new Date(),
+            telefone: cliente.telefone
           };
         });
         
@@ -103,7 +107,8 @@ export const ClienteProvider: React.FC<{ children: React.ReactNode }> = ({ child
             transacoes: cliente.transacoes.map((t: any) => ({
               ...t,
               data: new Date(t.data)
-            }))
+            })),
+            dataVencimento: cliente.dataVencimento ? new Date(cliente.dataVencimento) : new Date()
           })));
         } catch (e) {
           console.error("Erro ao carregar dados do localStorage:", e);
@@ -135,17 +140,43 @@ export const ClienteProvider: React.FC<{ children: React.ReactNode }> = ({ child
     calcularEstatisticas()
   );
   
+  // Normalizar texto para pesquisa (remover acentos)
+  const normalizarTexto = (texto: string): string => {
+    return texto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  };
+  
   // Filtrar clientes pelo nome
-  const clientesFiltrados = clientes.filter(cliente => 
-    cliente.nome.toLowerCase().includes(filtroNome.toLowerCase())
-  );
+  const clientesFiltrados = clientes.filter(cliente => {
+    const nomeNormalizado = normalizarTexto(cliente.nome);
+    const filtroNormalizado = normalizarTexto(filtroNome);
+    return nomeNormalizado.includes(filtroNormalizado);
+  });
+  
+  // Filtrar clientes vencidos
+  const clientesVencidos = clientes.filter(cliente => {
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    
+    const dataVencimento = cliente.dataVencimento ? new Date(cliente.dataVencimento) : null;
+    if (!dataVencimento) return false;
+    
+    dataVencimento.setHours(0, 0, 0, 0);
+    
+    return dataVencimento < hoje && cliente.valorPendente > 0;
+  }).sort((a, b) => {
+    const dataA = a.dataVencimento ? new Date(a.dataVencimento).getTime() : 0;
+    const dataB = b.dataVencimento ? new Date(b.dataVencimento).getTime() : 0;
+    return dataA - dataB; // Do mais antigo para o mais recente
+  });
   
   // Adicionar um novo cliente
-  const adicionarCliente = async (nome: string, valorNota: number) => {
+  const adicionarCliente = async (nome: string, valorNota: number, dataVencimento?: Date, telefone?: string) => {
     if (!nome || valorNota <= 0) {
       toast.error("Por favor, preencha o nome e um valor válido.");
       return undefined;
     }
+    
+    const dataVenc = dataVencimento || new Date();
     
     try {
       // Criar o cliente no Supabase
@@ -155,7 +186,9 @@ export const ClienteProvider: React.FC<{ children: React.ReactNode }> = ({ child
           nome,
           total_nota: valorNota,
           valor_pendente: valorNota,
-          valor_abatido: 0
+          valor_abatido: 0,
+          data_vencimento: dataVenc.toISOString().split('T')[0],
+          telefone
         }])
         .select()
         .single();
@@ -194,6 +227,8 @@ export const ClienteProvider: React.FC<{ children: React.ReactNode }> = ({ child
         totalNota: valorNota,
         valorPendente: valorNota,
         valorAbatido: 0,
+        dataVencimento: dataVencimento || new Date(),
+        telefone,
         transacoes: [
           {
             id: uuidv4(),
@@ -207,6 +242,96 @@ export const ClienteProvider: React.FC<{ children: React.ReactNode }> = ({ child
       
       setClientes(prevClientes => [novoCliente, ...prevClientes]);
       return novoClienteId;
+    }
+  };
+  
+  // Atualizar data de vencimento
+  const atualizarDataVencimento = async (clienteId: string, novaDataVencimento: Date) => {
+    try {
+      const { error } = await supabase
+        .from('clientes')
+        .update({
+          data_vencimento: novaDataVencimento.toISOString().split('T')[0]
+        })
+        .eq('id', clienteId);
+      
+      if (error) throw error;
+      
+      // Atualizar o estado local
+      setClientes(prevClientes => 
+        prevClientes.map(cliente => {
+          if (cliente.id === clienteId) {
+            return {
+              ...cliente,
+              dataVencimento: novaDataVencimento
+            };
+          }
+          return cliente;
+        })
+      );
+      
+      toast.success("Data de vencimento atualizada com sucesso!");
+    } catch (error) {
+      console.error('Erro ao atualizar data de vencimento:', error);
+      toast.error("Erro ao atualizar data de vencimento. Por favor, tente novamente.");
+      
+      // Fallback para armazenamento local
+      setClientes(prevClientes => 
+        prevClientes.map(cliente => {
+          if (cliente.id === clienteId) {
+            return {
+              ...cliente,
+              dataVencimento: novaDataVencimento
+            };
+          }
+          return cliente;
+        })
+      );
+    }
+  };
+  
+  // Atualizar telefone
+  const atualizarTelefone = async (clienteId: string, novoTelefone: string) => {
+    try {
+      const { error } = await supabase
+        .from('clientes')
+        .update({
+          telefone: novoTelefone
+        })
+        .eq('id', clienteId);
+      
+      if (error) throw error;
+      
+      // Atualizar o estado local
+      setClientes(prevClientes => 
+        prevClientes.map(cliente => {
+          if (cliente.id === clienteId) {
+            return {
+              ...cliente,
+              telefone: novoTelefone
+            };
+          }
+          return cliente;
+        })
+      );
+      
+      toast.success("Telefone atualizado com sucesso!");
+    } catch (error) {
+      console.error('Erro ao atualizar telefone:', error);
+      toast.error("Erro ao atualizar telefone. Por favor, tente novamente.");
+      
+      // Fallback para armazenamento local
+      setClientes(prevClientes => 
+        prevClientes.map(cliente => {
+          if (cliente.id === clienteId) {
+            return {
+              ...cliente,
+              telefone: novoTelefone
+            };
+          }
+          return cliente;
+        })
+      );
     }
   };
   
@@ -233,7 +358,7 @@ export const ClienteProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
   
   // Adicionar valor à nota de um cliente
-  const adicionarValorNota = async (clienteId: string, valor: number, descricao?: string) => {
+  const adicionarValorNota = async (clienteId: string, valor: number, descricao?: string, novaDataVencimento?: Date) => {
     if (valor <= 0) {
       toast.error("Por favor, insira um valor válido.");
       return;
@@ -259,12 +384,19 @@ export const ClienteProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const novoTotalNota = cliente.totalNota + valor;
       const novoValorPendente = cliente.valorPendente + valor;
       
+      const updateData: any = {
+        total_nota: novoTotalNota,
+        valor_pendente: novoValorPendente
+      };
+      
+      // Atualizar data de vencimento se fornecida
+      if (novaDataVencimento) {
+        updateData.data_vencimento = novaDataVencimento.toISOString().split('T')[0];
+      }
+      
       const { error: clienteError } = await supabase
         .from('clientes')
-        .update({
-          total_nota: novoTotalNota,
-          valor_pendente: novoValorPendente
-        })
+        .update(updateData)
         .eq('id', clienteId);
       
       if (clienteError) throw clienteError;
@@ -293,6 +425,7 @@ export const ClienteProvider: React.FC<{ children: React.ReactNode }> = ({ child
               ...cliente,
               totalNota: cliente.totalNota + valor,
               valorPendente: cliente.valorPendente + valor,
+              dataVencimento: novaDataVencimento || cliente.dataVencimento,
               transacoes: [novaTransacao, ...cliente.transacoes]
             };
           }
@@ -303,7 +436,7 @@ export const ClienteProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
   
   // Registrar um pagamento
-  const registrarPagamento = async (clienteId: string, valor: number, descricao?: string) => {
+  const registrarPagamento = async (clienteId: string, valor: number, descricao?: string, novaDataVencimento?: Date) => {
     if (valor <= 0) {
       toast.error("Por favor, insira um valor válido.");
       return;
@@ -337,12 +470,19 @@ export const ClienteProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const novoValorPendente = cliente.valorPendente - valorPagamento;
       const novoValorAbatido = cliente.valorAbatido + valorPagamento;
       
+      const updateData: any = {
+        valor_pendente: novoValorPendente,
+        valor_abatido: novoValorAbatido
+      };
+      
+      // Atualizar data de vencimento se fornecida
+      if (novaDataVencimento) {
+        updateData.data_vencimento = novaDataVencimento.toISOString().split('T')[0];
+      }
+      
       const { error: clienteError } = await supabase
         .from('clientes')
-        .update({
-          valor_pendente: novoValorPendente,
-          valor_abatido: novoValorAbatido
-        })
+        .update(updateData)
         .eq('id', clienteId);
       
       if (clienteError) throw clienteError;
@@ -377,6 +517,7 @@ export const ClienteProvider: React.FC<{ children: React.ReactNode }> = ({ child
               ...cliente,
               valorPendente: cliente.valorPendente - valorPagamento,
               valorAbatido: cliente.valorAbatido + valorPagamento,
+              dataVencimento: novaDataVencimento || cliente.dataVencimento,
               transacoes: [novaTransacao, ...cliente.transacoes]
             };
           }
@@ -609,7 +750,10 @@ export const ClienteProvider: React.FC<{ children: React.ReactNode }> = ({ child
     editarTransacao,
     removerTransacao,
     getClienteById,
-    clientesFiltrados
+    clientesFiltrados,
+    atualizarDataVencimento,
+    atualizarTelefone,
+    clientesVencidos
   };
   
   return (

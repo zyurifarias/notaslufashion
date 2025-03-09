@@ -6,6 +6,8 @@ export interface Cliente {
   valorPendente: number;
   valorAbatido: number;
   transacoes: Transacao[];
+  dataVencimento?: Date;
+  telefone?: string;
 }
 
 export interface Transacao {
