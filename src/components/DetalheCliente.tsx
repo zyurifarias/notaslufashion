@@ -24,7 +24,7 @@ import {
   ShoppingBag,
   Calendar as CalendarIcon,
   Phone,
-  MessageSquare
+  Whatsapp
 } from 'lucide-react';
 import {
   Dialog,
@@ -60,7 +60,8 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
     editarTransacao,
     removerTransacao,
     atualizarDataVencimento,
-    atualizarTelefone
+    atualizarTelefone,
+    atualizarNomeCliente
   } = useClientes();
   const navigate = useNavigate();
   
@@ -83,6 +84,9 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
   
   const [editandoDataVencimento, setEditandoDataVencimento] = useState(false);
   const [novaDataVencimento, setNovaDataVencimento] = useState<Date | undefined>(undefined);
+  
+  const [editandoNome, setEditandoNome] = useState(false);
+  const [novoNome, setNovoNome] = useState('');
   
   if (!cliente) {
     return (
@@ -159,6 +163,13 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
     setEditandoDataVencimento(false);
   };
   
+  const handleSalvarNome = () => {
+    if (novoNome.trim()) {
+      atualizarNomeCliente(clienteId, novoNome);
+    }
+    setEditandoNome(false);
+  };
+  
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
   
@@ -213,6 +224,24 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
     return `https://wa.me/55${phoneNumber}?text=Olá,%20sua%20nota%20venceu.`;
   };
   
+  // Fechar calendário após selecionar uma data
+  const handleSelectDataVencimento = (date: Date | undefined) => {
+    setNovaDataVencimento(date);
+    if (date) {
+      handleSalvarDataVencimento();
+    }
+  };
+  
+  // Fechar calendário após selecionar uma data na adição de valor
+  const handleSelectDataVencimentoAdicao = (date: Date | undefined) => {
+    setDataVencimentoAdicao(date);
+  };
+  
+  // Fechar calendário após selecionar uma data no pagamento
+  const handleSelectDataVencimentoPagamento = (date: Date | undefined) => {
+    setDataVencimentoPagamento(date);
+  };
+  
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -261,8 +290,43 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
           <div className="h-10 w-10 rounded-full bg-fashion-primary/20 flex items-center justify-center">
             <ShoppingBag size={18} className="text-fashion-dark" />
           </div>
-          <div>
-            <h2 className="text-xl font-sans font-medium">{cliente.nome}</h2>
+          <div className="flex-1">
+            {editandoNome ? (
+              <div className="flex items-center gap-2">
+                <Input
+                  type="text"
+                  value={novoNome}
+                  onChange={(e) => setNovoNome(e.target.value)}
+                  placeholder="Nome do cliente"
+                  className="input-fashion"
+                />
+                <button 
+                  onClick={handleSalvarNome}
+                  className="text-green-600 hover:text-green-700 p-1"
+                >
+                  <Save size={16} />
+                </button>
+                <button 
+                  onClick={() => setEditandoNome(false)}
+                  className="text-gray-500 hover:text-gray-700 p-1"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-sans font-medium">{cliente.nome}</h2>
+                <button 
+                  onClick={() => {
+                    setNovoNome(cliente.nome);
+                    setEditandoNome(true);
+                  }}
+                  className="text-fashion-dark/70 hover:text-fashion-dark p-1"
+                >
+                  <Edit size={16} />
+                </button>
+              </div>
+            )}
             <p className="text-sm text-gray-500">
               Nota criada em {cliente.transacoes.length > 0 ? formatarData(cliente.transacoes[0].data) : '-'}
             </p>
@@ -320,7 +384,7 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
                         className="text-green-600 hover:text-green-700 p-1"
                         aria-label="Enviar mensagem no WhatsApp"
                       >
-                        <MessageSquare size={16} />
+                        <Whatsapp size={16} />
                       </a>
                     )}
                   </div>
@@ -354,26 +418,13 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
                         <Calendar
                           mode="single"
                           selected={novaDataVencimento}
-                          onSelect={(date) => date && setNovaDataVencimento(date)}
+                          onSelect={handleSelectDataVencimento}
                           initialFocus
                           locale={ptBR}
                           className={cn("p-3 pointer-events-auto")}
                         />
                       </PopoverContent>
                     </Popover>
-                    <button 
-                      onClick={handleSalvarDataVencimento}
-                      className="text-green-600 hover:text-green-700 p-1"
-                      disabled={!novaDataVencimento}
-                    >
-                      <Save size={16} />
-                    </button>
-                    <button 
-                      onClick={() => setEditandoDataVencimento(false)}
-                      className="text-gray-500 hover:text-gray-700 p-1"
-                    >
-                      <X size={16} />
-                    </button>
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
@@ -471,7 +522,7 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
                       <Calendar
                         mode="single"
                         selected={dataVencimentoAdicao}
-                        onSelect={(date) => setDataVencimentoAdicao(date)}
+                        onSelect={handleSelectDataVencimentoAdicao}
                         initialFocus
                         locale={ptBR}
                         className={cn("p-3 pointer-events-auto")}
@@ -558,7 +609,7 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
                       <Calendar
                         mode="single"
                         selected={dataVencimentoPagamento}
-                        onSelect={(date) => setDataVencimentoPagamento(date)}
+                        onSelect={handleSelectDataVencimentoPagamento}
                         initialFocus
                         locale={ptBR}
                         className={cn("p-3 pointer-events-auto")}

@@ -4,8 +4,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Header from '@/components/Header';
 import EstatisticasCard from '@/components/EstatisticasCard';
 import ListaClientes from '@/components/ListaClientes';
+import NotasVencidas from '@/components/NotasVencidas';
 import NovoClienteForm from '@/components/NovoClienteForm';
-import { Users, Receipt } from 'lucide-react';
+import { Users, Receipt, AlertTriangle } from 'lucide-react';
 
 const Index = () => {
   return (
@@ -16,10 +17,14 @@ const Index = () => {
         <EstatisticasCard />
         
         <Tabs defaultValue="clientes" className="w-full">
-          <TabsList className="mb-6 grid w-full grid-cols-2">
+          <TabsList className="mb-6 grid w-full grid-cols-3">
             <TabsTrigger value="clientes" className="flex items-center gap-2 data-[state=active]:bg-fashion-primary/20">
               <Users size={16} />
               Clientes
+            </TabsTrigger>
+            <TabsTrigger value="vencidas" className="flex items-center gap-2 data-[state=active]:bg-fashion-primary/20">
+              <AlertTriangle size={16} />
+              Vencidas
             </TabsTrigger>
             <TabsTrigger value="nova-nota" className="flex items-center gap-2 data-[state=active]:bg-fashion-primary/20">
               <Receipt size={16} />
@@ -29,6 +34,10 @@ const Index = () => {
           
           <TabsContent value="clientes">
             <ListaClientes />
+          </TabsContent>
+          
+          <TabsContent value="vencidas">
+            <NotasVencidas />
           </TabsContent>
           
           <TabsContent value="nova-nota">
