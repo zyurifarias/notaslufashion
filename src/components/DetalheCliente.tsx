@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useClientes } from '@/contexts/ClienteContext';
@@ -24,7 +23,7 @@ import {
   ShoppingBag,
   Calendar as CalendarIcon,
   Phone,
-  Whatsapp
+  MessageSquare
 } from 'lucide-react';
 import {
   Dialog,
@@ -178,7 +177,6 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
   
   const isVencida = dataVencimento < hoje && cliente.valorPendente > 0;
   
-  // Formatar telefone: (99) 99999-9999
   const formatarTelefone = (value: string) => {
     if (!value) return '';
     
@@ -203,7 +201,6 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
   
   const handleTelefoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value;
-    // Remover todos os caracteres que não são números
     const numbersOnly = input.replace(/\D/g, '');
     
     if (numbersOnly.length <= 11) {
@@ -211,20 +208,17 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
     }
   };
   
-  // Obter número para WhatsApp (apenas dígitos)
   const getWhatsAppNumber = () => {
     if (!cliente.telefone) return '';
     return cliente.telefone.replace(/\D/g, '');
   };
   
-  // Link para WhatsApp
   const getWhatsAppLink = () => {
     const phoneNumber = getWhatsAppNumber();
     if (!phoneNumber) return '#';
     return `https://wa.me/55${phoneNumber}?text=Olá,%20sua%20nota%20venceu.`;
   };
   
-  // Fechar calendário após selecionar uma data
   const handleSelectDataVencimento = (date: Date | undefined) => {
     setNovaDataVencimento(date);
     if (date) {
@@ -232,12 +226,10 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
     }
   };
   
-  // Fechar calendário após selecionar uma data na adição de valor
   const handleSelectDataVencimentoAdicao = (date: Date | undefined) => {
     setDataVencimentoAdicao(date);
   };
   
-  // Fechar calendário após selecionar uma data no pagamento
   const handleSelectDataVencimentoPagamento = (date: Date | undefined) => {
     setDataVencimentoPagamento(date);
   };
@@ -334,7 +326,6 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
         </div>
         
         <div className="space-y-4 mb-6">
-          {/* Telefone do Cliente */}
           <div className="card-fashion p-4 bg-fashion-light">
             <div className="flex justify-between items-center">
               <div className="space-y-1">
@@ -384,7 +375,7 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
                         className="text-green-600 hover:text-green-700 p-1"
                         aria-label="Enviar mensagem no WhatsApp"
                       >
-                        <Whatsapp size={16} />
+                        <MessageSquare size={16} />
                       </a>
                     )}
                   </div>
@@ -393,7 +384,6 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
             </div>
           </div>
           
-          {/* Data de Vencimento */}
           <div className={`card-fashion p-4 ${isVencida ? 'bg-red-50 border-red-200' : 'bg-fashion-light'}`}>
             <div className="flex justify-between items-center">
               <div className="space-y-1">
