@@ -22,6 +22,7 @@ const NovoClienteForm: React.FC = () => {
   const [telefone, setTelefone] = useState('');
   const [dataVencimento, setDataVencimento] = useState<Date>(new Date());
   const [isLoading, setIsLoading] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const { adicionarCliente } = useClientes();
   const navigate = useNavigate();
 
@@ -88,6 +89,14 @@ const NovoClienteForm: React.FC = () => {
     }
   };
 
+  // Função para lidar com a seleção de data 
+  const handleDateSelect = (date: Date | undefined) => {
+    if (date) {
+      setDataVencimento(date);
+      setCalendarOpen(false); // Fechar o calendário após selecionar a data
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="card-fashion p-6 max-w-md mx-auto">
       <div className="flex items-center gap-2 mb-6">
@@ -149,7 +158,7 @@ const NovoClienteForm: React.FC = () => {
         
         <div className="space-y-2">
           <Label htmlFor="dataVencimento">Data de Vencimento</Label>
-          <Popover>
+          <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
             <PopoverTrigger asChild>
               <Button
                 id="dataVencimento"
@@ -171,7 +180,7 @@ const NovoClienteForm: React.FC = () => {
               <Calendar
                 mode="single"
                 selected={dataVencimento}
-                onSelect={(date) => date && setDataVencimento(date)}
+                onSelect={handleDateSelect}
                 initialFocus
                 locale={ptBR}
                 className={cn("p-3 pointer-events-auto")}

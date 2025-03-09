@@ -22,13 +22,13 @@ const Index = () => {
               <Users size={16} />
               Clientes
             </TabsTrigger>
-            <TabsTrigger value="vencidas" className="flex items-center gap-2 data-[state=active]:bg-fashion-primary/20">
-              <AlertTriangle size={16} />
-              Vencidas
-            </TabsTrigger>
             <TabsTrigger value="nova-nota" className="flex items-center gap-2 data-[state=active]:bg-fashion-primary/20">
               <Receipt size={16} />
               Nova Nota
+            </TabsTrigger>
+            <TabsTrigger value="vencidas" className="flex items-center gap-2 data-[state=active]:bg-fashion-primary/20">
+              <AlertTriangle size={16} />
+              Vencidas
             </TabsTrigger>
           </TabsList>
           
@@ -36,12 +36,12 @@ const Index = () => {
             <ListaClientes />
           </TabsContent>
           
-          <TabsContent value="vencidas">
-            <NotasVencidas />
-          </TabsContent>
-          
           <TabsContent value="nova-nota">
             <NovoClienteForm />
+          </TabsContent>
+          
+          <TabsContent value="vencidas">
+            <NotasVencidas />
           </TabsContent>
         </Tabs>
       </div>

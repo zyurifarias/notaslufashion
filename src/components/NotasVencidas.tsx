@@ -2,12 +2,13 @@
 import React from 'react';
 import { useClientes } from '@/contexts/ClienteContext';
 import { useNavigate } from 'react-router-dom';
-import { User, ChevronRight, Clock, AlertTriangle } from 'lucide-react';
+import { User, ChevronRight, Clock, AlertTriangle, Search } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { Input } from '@/components/ui/input';
 
 const NotasVencidas: React.FC = () => {
-  const { clientesVencidos } = useClientes();
+  const { clientesVencidos, filtroNome, setFiltroNome } = useClientes();
   const navigate = useNavigate();
 
   const formatarMoeda = (valor: number) => {
@@ -37,14 +38,34 @@ const NotasVencidas: React.FC = () => {
     return diffDays;
   };
 
+  // Filtrar clientes vencidos de acordo com a busca
+  const clientesVencidosFiltrados = clientesVencidos.filter(cliente => {
+    const nomeNormalizado = cliente.nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const filtroNormalizado = filtroNome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    return nomeNormalizado.includes(filtroNormalizado);
+  });
+
   // Ordenar notas vencidas da mais antiga para a mais recente
-  const clientesVencidosOrdenados = [...clientesVencidos].sort((a, b) => {
+  const clientesVencidosOrdenados = [...clientesVencidosFiltrados].sort((a, b) => {
     if (!a.dataVencimento || !b.dataVencimento) return 0;
     return new Date(a.dataVencimento).getTime() - new Date(b.dataVencimento).getTime();
   });
 
   return (
     <div className="space-y-4">
+      <div className="relative mb-4">
+        <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+          <Search size={16} className="text-gray-400" />
+        </div>
+        <Input
+          type="text"
+          placeholder="Buscar cliente..."
+          value={filtroNome}
+          onChange={(e) => setFiltroNome(e.target.value)}
+          className="pl-10 border-gray-300 rounded-md"
+        />
+      </div>
+      
       <h3 className="font-medium text-lg mb-4">Notas Vencidas ({clientesVencidosOrdenados.length})</h3>
       
       <div className="space-y-3">
