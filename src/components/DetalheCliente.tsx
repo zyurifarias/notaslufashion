@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useClientes } from '@/contexts/ClienteContext';
 import { Input } from '@/components/ui/input';
@@ -64,8 +64,6 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
   } = useClientes();
   const navigate = useNavigate();
   
-  const cliente = getClienteById(clienteId);
-  
   const [valorAdicao, setValorAdicao] = useState('');
   const [descricaoAdicao, setDescricaoAdicao] = useState('');
   const [dataVencimentoAdicao, setDataVencimentoAdicao] = useState<Date | undefined>(undefined);
@@ -86,6 +84,10 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
   
   const [editandoNome, setEditandoNome] = useState(false);
   const [novoNome, setNovoNome] = useState('');
+  
+  const [forceUpdate, setForceUpdate] = useState(0);
+  
+  const cliente = getClienteById(clienteId);
   
   if (!cliente) {
     return (
@@ -158,6 +160,7 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
   const handleSalvarDataVencimento = () => {
     if (novaDataVencimento) {
       atualizarDataVencimento(clienteId, novaDataVencimento);
+      setForceUpdate(prev => prev + 1);
     }
     setEditandoDataVencimento(false);
   };
@@ -220,9 +223,11 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
   };
   
   const handleSelectDataVencimento = (date: Date | undefined) => {
-    setNovaDataVencimento(date);
     if (date) {
-      handleSalvarDataVencimento();
+      setNovaDataVencimento(date);
+      atualizarDataVencimento(clienteId, date);
+      setForceUpdate(prev => prev + 1);
+      setEditandoDataVencimento(false);
     }
   };
   
