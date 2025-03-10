@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useClientes } from '@/contexts/ClienteContext';
@@ -239,36 +238,20 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
   
   const handleSelectDataVencimentoAdicao = (date: Date | undefined) => {
     setDataVencimentoAdicao(date);
-    // Automatically close the popover after date selection
-    const popoverElements = document.querySelectorAll('[data-state="open"][data-radix-popover-content]');
-    popoverElements.forEach(el => {
-      // Find the parent Popover component and trigger a close
-      const parentPopover = el.parentElement;
-      if (parentPopover) {
-        const popoverCloseEvent = new CustomEvent('closePopover');
-        parentPopover.dispatchEvent(popoverCloseEvent);
-      }
-      
-      // Alternatively, try to click outside to close
+    
+    // Find any open popover and close it by clicking outside
+    setTimeout(() => {
       document.body.click();
-    });
+    }, 10);
   };
   
   const handleSelectDataVencimentoPagamento = (date: Date | undefined) => {
     setDataVencimentoPagamento(date);
-    // Automatically close the popover after date selection
-    const popoverElements = document.querySelectorAll('[data-state="open"][data-radix-popover-content]');
-    popoverElements.forEach(el => {
-      // Find the parent Popover component and trigger a close
-      const parentPopover = el.parentElement;
-      if (parentPopover) {
-        const popoverCloseEvent = new CustomEvent('closePopover');
-        parentPopover.dispatchEvent(popoverCloseEvent);
-      }
-      
-      // Alternatively, try to click outside to close
+    
+    // Find any open popover and close it by clicking outside
+    setTimeout(() => {
       document.body.click();
-    });
+    }, 10);
   };
   
   const handleGerarPDF = () => {
@@ -276,13 +259,10 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
     
     const doc = new jsPDF();
     
-    // Add LuFashion title and header
-    doc.setFontSize(22);
-    doc.setTextColor(128, 0, 128);
-    doc.text("LuFashion", 105, 15, { align: "center" });
-    
-    doc.setFontSize(18);
-    doc.text("Comprovante de Nota LuFashion", 105, 25, { align: "center" });
+    // Updated PDF styling: removed "LuFashion" title and changed all purple to black
+    doc.setFontSize(20);
+    doc.setTextColor(0, 0, 0); // Changed to black
+    doc.text("Comprovante de Nota LuFashion", 105, 20, { align: "center" });
     
     doc.setFontSize(14);
     doc.setTextColor(0, 0, 0);
@@ -306,7 +286,7 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
     doc.setFontSize(14);
     doc.text("Informações Financeiras", 14, 90);
     
-    // Rearranged financial information
+    // Keep rearranged financial information
     doc.setFontSize(12);
     doc.text(`Valor Total da Nota: ${formatarMoeda(cliente.totalNota)}`, 14, 100);
     doc.text(`Valor Abatido: ${formatarMoeda(cliente.valorAbatido)}`, 14, 110);
@@ -334,7 +314,7 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
       head: [["Data", "Descrição", "Tipo", "Valor"]],
       body: tableData,
       theme: "striped",
-      headStyles: { fillColor: [128, 0, 128] },
+      headStyles: { fillColor: [0, 0, 0] }, // Changed from purple to black
       styles: { fontSize: 10 },
       columnStyles: {
         0: { cellWidth: 30 },
