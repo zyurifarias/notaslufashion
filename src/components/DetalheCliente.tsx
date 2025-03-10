@@ -72,10 +72,12 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
   const [valorAdicao, setValorAdicao] = useState('');
   const [descricaoAdicao, setDescricaoAdicao] = useState('');
   const [dataVencimentoAdicao, setDataVencimentoAdicao] = useState<Date | undefined>(undefined);
+  const [popoverAdicaoAberto, setPopoverAdicaoAberto] = useState(false);
   
   const [valorPagamento, setValorPagamento] = useState('');
   const [descricaoPagamento, setDescricaoPagamento] = useState('');
   const [dataVencimentoPagamento, setDataVencimentoPagamento] = useState<Date | undefined>(undefined);
+  const [popoverPagamentoAberto, setPopoverPagamentoAberto] = useState(false);
   
   const [transacaoEditando, setTransacaoEditando] = useState<string | null>(null);
   const [valorEditando, setValorEditando] = useState('');
@@ -238,20 +240,12 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
   
   const handleSelectDataVencimentoAdicao = (date: Date | undefined) => {
     setDataVencimentoAdicao(date);
-    
-    // Find any open popover and close it by clicking outside
-    setTimeout(() => {
-      document.body.click();
-    }, 10);
+    setPopoverAdicaoAberto(false);
   };
   
   const handleSelectDataVencimentoPagamento = (date: Date | undefined) => {
     setDataVencimentoPagamento(date);
-    
-    // Find any open popover and close it by clicking outside
-    setTimeout(() => {
-      document.body.click();
-    }, 10);
+    setPopoverPagamentoAberto(false);
   };
   
   const handleGerarPDF = () => {
@@ -259,9 +253,8 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
     
     const doc = new jsPDF();
     
-    // Updated PDF styling: removed "LuFashion" title and changed all purple to black
     doc.setFontSize(20);
-    doc.setTextColor(0, 0, 0); // Changed to black
+    doc.setTextColor(0, 0, 0);
     doc.text("Comprovante de Nota LuFashion", 105, 20, { align: "center" });
     
     doc.setFontSize(14);
@@ -286,7 +279,6 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
     doc.setFontSize(14);
     doc.text("Informações Financeiras", 14, 90);
     
-    // Keep rearranged financial information
     doc.setFontSize(12);
     doc.text(`Valor Total da Nota: ${formatarMoeda(cliente.totalNota)}`, 14, 100);
     doc.text(`Valor Abatido: ${formatarMoeda(cliente.valorAbatido)}`, 14, 110);
@@ -295,7 +287,6 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
     const tableData = cliente.transacoes
       .sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime())
       .map(transacao => {
-        // Generate automatic description if none is provided
         let descricao = transacao.descricao;
         if (!descricao || descricao.trim() === '') {
           descricao = transacao.tipo === "adicao" ? "Valor Adicionado" : "Valor Abatido";
@@ -314,7 +305,7 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
       head: [["Data", "Descrição", "Tipo", "Valor"]],
       body: tableData,
       theme: "striped",
-      headStyles: { fillColor: [0, 0, 0] }, // Changed from purple to black
+      headStyles: { fillColor: [0, 0, 0] },
       styles: { fontSize: 10 },
       columnStyles: {
         0: { cellWidth: 30 },
@@ -508,7 +499,7 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
                 <p className="text-sm text-gray-500">Data de Vencimento</p>
                 {editandoDataVencimento ? (
                   <div className="flex items-center gap-2">
-                    <Popover>
+                    <Popover open={editandoDataVencimento} onOpenChange={setEditandoDataVencimento}>
                       <PopoverTrigger asChild>
                         <Button
                           variant="outline"
@@ -609,7 +600,7 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Nova Data de Vencimento (opcional)</label>
-                  <Popover>
+                  <Popover open={popoverAdicaoAberto} onOpenChange={setPopoverAdicaoAberto}>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
@@ -617,6 +608,7 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
                           "w-full justify-start text-left font-normal input-fashion",
                           !dataVencimentoAdicao && "text-muted-foreground"
                         )}
+                        onClick={() => setPopoverAdicaoAberto(true)}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {dataVencimentoAdicao ? (
@@ -696,7 +688,7 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Nova Data de Vencimento (opcional)</label>
-                  <Popover>
+                  <Popover open={popoverPagamentoAberto} onOpenChange={setPopoverPagamentoAberto}>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
@@ -704,6 +696,7 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
                           "w-full justify-start text-left font-normal input-fashion",
                           !dataVencimentoPagamento && "text-muted-foreground"
                         )}
+                        onClick={() => setPopoverPagamentoAberto(true)}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {dataVencimentoPagamento ? (
