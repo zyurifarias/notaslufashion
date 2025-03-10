@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useClientes } from '@/contexts/ClienteContext';
@@ -238,23 +239,35 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
   
   const handleSelectDataVencimentoAdicao = (date: Date | undefined) => {
     setDataVencimentoAdicao(date);
+    // Automatically close the popover after date selection
     const popoverElements = document.querySelectorAll('[data-state="open"][data-radix-popover-content]');
     popoverElements.forEach(el => {
-      const closeButton = el.querySelector('[data-radix-collection-item]');
-      if (closeButton) {
-        (closeButton as HTMLElement).click();
+      // Find the parent Popover component and trigger a close
+      const parentPopover = el.parentElement;
+      if (parentPopover) {
+        const popoverCloseEvent = new CustomEvent('closePopover');
+        parentPopover.dispatchEvent(popoverCloseEvent);
       }
+      
+      // Alternatively, try to click outside to close
+      document.body.click();
     });
   };
   
   const handleSelectDataVencimentoPagamento = (date: Date | undefined) => {
     setDataVencimentoPagamento(date);
+    // Automatically close the popover after date selection
     const popoverElements = document.querySelectorAll('[data-state="open"][data-radix-popover-content]');
     popoverElements.forEach(el => {
-      const closeButton = el.querySelector('[data-radix-collection-item]');
-      if (closeButton) {
-        (closeButton as HTMLElement).click();
+      // Find the parent Popover component and trigger a close
+      const parentPopover = el.parentElement;
+      if (parentPopover) {
+        const popoverCloseEvent = new CustomEvent('closePopover');
+        parentPopover.dispatchEvent(popoverCloseEvent);
       }
+      
+      // Alternatively, try to click outside to close
+      document.body.click();
     });
   };
   
@@ -263,9 +276,13 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
     
     const doc = new jsPDF();
     
-    doc.setFontSize(20);
+    // Add LuFashion title and header
+    doc.setFontSize(22);
     doc.setTextColor(128, 0, 128);
-    doc.text("Comprovante de Nota", 105, 20, { align: "center" });
+    doc.text("LuFashion", 105, 15, { align: "center" });
+    
+    doc.setFontSize(18);
+    doc.text("Comprovante de Nota LuFashion", 105, 25, { align: "center" });
     
     doc.setFontSize(14);
     doc.setTextColor(0, 0, 0);
@@ -289,19 +306,28 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
     doc.setFontSize(14);
     doc.text("Informações Financeiras", 14, 90);
     
+    // Rearranged financial information
     doc.setFontSize(12);
     doc.text(`Valor Total da Nota: ${formatarMoeda(cliente.totalNota)}`, 14, 100);
-    doc.text(`Valor Pendente: ${formatarMoeda(cliente.valorPendente)}`, 14, 110);
-    doc.text(`Valor Abatido: ${formatarMoeda(cliente.valorAbatido)}`, 14, 120);
+    doc.text(`Valor Abatido: ${formatarMoeda(cliente.valorAbatido)}`, 14, 110);
+    doc.text(`Valor Pendente: ${formatarMoeda(cliente.valorPendente)}`, 14, 120);
     
     const tableData = cliente.transacoes
       .sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime())
-      .map(transacao => [
-        format(transacao.data, "dd/MM/yyyy"),
-        transacao.descricao || "-",
-        transacao.tipo === "adicao" ? "Adição" : "Pagamento",
-        `${transacao.tipo === "adicao" ? "+" : "-"} ${formatarMoeda(transacao.valor).replace("R$", "").trim()}`
-      ]);
+      .map(transacao => {
+        // Generate automatic description if none is provided
+        let descricao = transacao.descricao;
+        if (!descricao || descricao.trim() === '') {
+          descricao = transacao.tipo === "adicao" ? "Valor Adicionado" : "Valor Abatido";
+        }
+        
+        return [
+          format(transacao.data, "dd/MM/yyyy"),
+          descricao,
+          transacao.tipo === "adicao" ? "Adição" : "Pagamento",
+          `${transacao.tipo === "adicao" ? "+" : "-"} ${formatarMoeda(transacao.valor).replace("R$", "").trim()}`
+        ];
+      });
     
     autoTable(doc, {
       startY: 150,
@@ -337,7 +363,7 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
   
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <Button 
           variant="outline" 
           onClick={() => navigate('/')}
@@ -347,7 +373,7 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
           Voltar
         </Button>
         
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button 
             variant="outline" 
             onClick={handleGerarPDF}
