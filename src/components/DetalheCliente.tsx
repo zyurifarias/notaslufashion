@@ -23,7 +23,9 @@ import {
   ShoppingBag,
   Calendar as CalendarIcon,
   Phone,
-  MessageSquare
+  MessageSquare,
+  Share2,
+  FileText
 } from 'lucide-react';
 import {
   Dialog,
@@ -45,6 +47,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { jsPDF } from "jspdf";
+import autoTable from 'jspdf-autotable';
+import { toast } from "sonner";
 
 interface DetalheClienteProps {
   clienteId: string;
@@ -233,10 +238,101 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
   
   const handleSelectDataVencimentoAdicao = (date: Date | undefined) => {
     setDataVencimentoAdicao(date);
+    const popoverElements = document.querySelectorAll('[data-state="open"][data-radix-popover-content]');
+    popoverElements.forEach(el => {
+      const closeButton = el.querySelector('[data-radix-collection-item]');
+      if (closeButton) {
+        (closeButton as HTMLElement).click();
+      }
+    });
   };
   
   const handleSelectDataVencimentoPagamento = (date: Date | undefined) => {
     setDataVencimentoPagamento(date);
+    const popoverElements = document.querySelectorAll('[data-state="open"][data-radix-popover-content]');
+    popoverElements.forEach(el => {
+      const closeButton = el.querySelector('[data-radix-collection-item]');
+      if (closeButton) {
+        (closeButton as HTMLElement).click();
+      }
+    });
+  };
+  
+  const handleGerarPDF = () => {
+    if (!cliente) return;
+    
+    const doc = new jsPDF();
+    
+    doc.setFontSize(20);
+    doc.setTextColor(128, 0, 128);
+    doc.text("Comprovante de Nota", 105, 20, { align: "center" });
+    
+    doc.setFontSize(14);
+    doc.setTextColor(0, 0, 0);
+    doc.text("Dados do Cliente", 14, 40);
+    
+    doc.setFontSize(12);
+    doc.text(`Nome: ${cliente.nome}`, 14, 50);
+    
+    if (cliente.telefone) {
+      doc.text(`Telefone: ${formatarTelefone(cliente.telefone)}`, 14, 60);
+    }
+    
+    doc.text(`Data de Vencimento: ${formatarData(cliente.dataVencimento)}`, 14, 70);
+    const isVencida = cliente.dataVencimento < new Date() && cliente.valorPendente > 0;
+    if (isVencida) {
+      doc.setTextColor(255, 0, 0);
+      doc.text("(VENCIDA)", 120, 70);
+      doc.setTextColor(0, 0, 0);
+    }
+    
+    doc.setFontSize(14);
+    doc.text("Informações Financeiras", 14, 90);
+    
+    doc.setFontSize(12);
+    doc.text(`Valor Total da Nota: ${formatarMoeda(cliente.totalNota)}`, 14, 100);
+    doc.text(`Valor Pendente: ${formatarMoeda(cliente.valorPendente)}`, 14, 110);
+    doc.text(`Valor Abatido: ${formatarMoeda(cliente.valorAbatido)}`, 14, 120);
+    
+    const tableData = cliente.transacoes
+      .sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime())
+      .map(transacao => [
+        format(transacao.data, "dd/MM/yyyy"),
+        transacao.descricao || "-",
+        transacao.tipo === "adicao" ? "Adição" : "Pagamento",
+        `${transacao.tipo === "adicao" ? "+" : "-"} ${formatarMoeda(transacao.valor).replace("R$", "").trim()}`
+      ]);
+    
+    autoTable(doc, {
+      startY: 150,
+      head: [["Data", "Descrição", "Tipo", "Valor"]],
+      body: tableData,
+      theme: "striped",
+      headStyles: { fillColor: [128, 0, 128] },
+      styles: { fontSize: 10 },
+      columnStyles: {
+        0: { cellWidth: 30 },
+        1: { cellWidth: 70 },
+        2: { cellWidth: 30 },
+        3: { cellWidth: 30, halign: "right" }
+      }
+    });
+    
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      doc.text(
+        `Documento gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}`,
+        105, 
+        doc.internal.pageSize.height - 10, 
+        { align: "center" }
+      );
+    }
+    
+    doc.save(`Nota_${cliente.nome.replace(/\s+/g, "_")}.pdf`);
+    toast.success("PDF gerado com sucesso!");
   };
   
   return (
@@ -251,35 +347,46 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
           Voltar
         </Button>
         
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="destructive" size="sm">
-              <Trash2 size={16} className="mr-2" />
-              Excluir Cliente
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Esta ação não pode ser desfeita. Isto irá excluir permanentemente o cliente
-                {cliente.nome && <span className="font-semibold"> {cliente.nome} </span>}
-                e todos os seus dados.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={() => {
-                  removerCliente(clienteId);
-                  navigate('/');
-                }}
-              >
-                Confirmar
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={handleGerarPDF}
+            className="btn-fashion-outline"
+          >
+            <FileText size={16} className="mr-2" />
+            Gerar PDF
+          </Button>
+          
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" size="sm">
+                <Trash2 size={16} className="mr-2" />
+                Excluir Cliente
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Esta ação não pode ser desfeita. Isto irá excluir permanentemente o cliente
+                  {cliente?.nome && <span className="font-semibold"> {cliente.nome} </span>}
+                  e todos os seus dados.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => {
+                    removerCliente(clienteId);
+                    navigate('/');
+                  }}
+                >
+                  Confirmar
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       </div>
       
       <div className="card-fashion p-6">
@@ -446,12 +553,12 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div className="card-fashion p-4 bg-fashion-light">
             <p className="text-sm text-gray-500 mb-1">Valor Total da Nota</p>
-            <p className="text-xl font-semibold">{formatarMoeda(cliente.totalNota)}</p>
+            <p className="text-xl font-semibold">{formatarMoeda(cliente?.totalNota || 0)}</p>
           </div>
           
           <div className="card-fashion p-4 bg-fashion-light">
             <p className="text-sm text-gray-500 mb-1">Valor Pendente</p>
-            <p className="text-xl font-semibold">{formatarMoeda(cliente.valorPendente)}</p>
+            <p className="text-xl font-semibold">{formatarMoeda(cliente?.valorPendente || 0)}</p>
           </div>
         </div>
         
