@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Cliente, Transacao, EstatisticasGerais } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
@@ -37,6 +36,16 @@ export const useClientes = () => {
 export const ClienteProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [filtroNome, setFiltroNome] = useState('');
+  
+  const ajustarDataTimezone = (data: Date): Date => {
+    const dataAjustada = new Date(data);
+    dataAjustada.setHours(12, 0, 0, 0);
+    return dataAjustada;
+  };
+  
+  const formatarDataParaSupabase = (data: Date): string => {
+    return ajustarDataTimezone(data).toISOString().split('T')[0];
+  };
   
   const carregarClientes = async () => {
     try {
@@ -160,6 +169,7 @@ export const ClienteProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
     
     const dataVenc = dataVencimento || new Date();
+    const dataFormatada = formatarDataParaSupabase(dataVenc);
     
     try {
       const { data: clienteData, error: clienteError } = await supabase
@@ -169,7 +179,7 @@ export const ClienteProvider: React.FC<{ children: React.ReactNode }> = ({ child
           total_nota: valorNota,
           valor_pendente: valorNota,
           valor_abatido: 0,
-          data_vencimento: dataVenc.toISOString().split('T')[0],
+          data_vencimento: dataFormatada,
           telefone
         }])
         .select()
@@ -226,25 +236,23 @@ export const ClienteProvider: React.FC<{ children: React.ReactNode }> = ({ child
   
   const atualizarDataVencimento = async (clienteId: string, novaDataVencimento: Date) => {
     try {
-      // Format the date correctly for Supabase (YYYY-MM-DD)
-      const formattedDate = novaDataVencimento.toISOString().split('T')[0];
+      const dataFormatada = formatarDataParaSupabase(novaDataVencimento);
       
       const { error } = await supabase
         .from('clientes')
         .update({
-          data_vencimento: formattedDate
+          data_vencimento: dataFormatada
         })
         .eq('id', clienteId);
       
       if (error) throw error;
       
-      // Update the local state immediately
       setClientes(prevClientes => 
         prevClientes.map(cliente => {
           if (cliente.id === clienteId) {
             return {
               ...cliente,
-              dataVencimento: new Date(novaDataVencimento)
+              dataVencimento: novaDataVencimento
             };
           }
           return cliente;
@@ -256,7 +264,6 @@ export const ClienteProvider: React.FC<{ children: React.ReactNode }> = ({ child
       console.error('Erro ao atualizar data de vencimento:', error);
       toast.error("Erro ao atualizar data de vencimento. Por favor, tente novamente.");
       
-      // Still update the local state as a fallback
       setClientes(prevClientes => 
         prevClientes.map(cliente => {
           if (cliente.id === clienteId) {
@@ -404,7 +411,7 @@ export const ClienteProvider: React.FC<{ children: React.ReactNode }> = ({ child
       };
       
       if (novaDataVencimento) {
-        updateData.data_vencimento = novaDataVencimento.toISOString().split('T')[0];
+        updateData.data_vencimento = formatarDataParaSupabase(novaDataVencimento);
       }
       
       const { error: clienteError } = await supabase
@@ -483,7 +490,7 @@ export const ClienteProvider: React.FC<{ children: React.ReactNode }> = ({ child
       };
       
       if (novaDataVencimento) {
-        updateData.data_vencimento = novaDataVencimento.toISOString().split('T')[0];
+        updateData.data_vencimento = formatarDataParaSupabase(novaDataVencimento);
       }
       
       const { error: clienteError } = await supabase

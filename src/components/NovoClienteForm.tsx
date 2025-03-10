@@ -26,6 +26,15 @@ const NovoClienteForm: React.FC = () => {
   const { adicionarCliente } = useClientes();
   const navigate = useNavigate();
 
+  // Função para ajustar o fuso horário da data
+  const ajustarDataTimezone = (data: Date): Date => {
+    // Cria uma nova data sem ajustes de timezone
+    const dataAjustada = new Date(data);
+    // Define hora, minutos, segundos e milisegundos para meio dia para evitar problemas com DST
+    dataAjustada.setHours(12, 0, 0, 0);
+    return dataAjustada;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -39,7 +48,10 @@ const NovoClienteForm: React.FC = () => {
     }
     
     try {
-      const novoClienteId = await adicionarCliente(nome.trim(), valor, dataVencimento, telefone);
+      // Ajustar a data de vencimento para corrigir o problema de fuso horário
+      const dataAjustada = ajustarDataTimezone(dataVencimento);
+      
+      const novoClienteId = await adicionarCliente(nome.trim(), valor, dataAjustada, telefone);
       
       // Limpar formulário
       setNome('');

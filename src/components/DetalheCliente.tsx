@@ -123,9 +123,18 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
     return format(data, "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
   };
   
+  const ajustarDataTimezone = (data: Date): Date => {
+    const dataAjustada = new Date(data);
+    dataAjustada.setHours(12, 0, 0, 0);
+    return dataAjustada;
+  };
+  
   const handleAdicionarValor = () => {
     const valor = parseFloat(valorAdicao.replace(',', '.'));
-    adicionarValorNota(clienteId, valor, descricaoAdicao, dataVencimentoAdicao);
+    
+    const dataAjustada = dataVencimentoAdicao ? ajustarDataTimezone(dataVencimentoAdicao) : undefined;
+    
+    adicionarValorNota(clienteId, valor, descricaoAdicao, dataAjustada);
     setValorAdicao('');
     setDescricaoAdicao('');
     setDataVencimentoAdicao(undefined);
@@ -133,7 +142,10 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
   
   const handleRegistrarPagamento = () => {
     const valor = parseFloat(valorPagamento.replace(',', '.'));
-    registrarPagamento(clienteId, valor, descricaoPagamento, dataVencimentoPagamento);
+    
+    const dataAjustada = dataVencimentoPagamento ? ajustarDataTimezone(dataVencimentoPagamento) : undefined;
+    
+    registrarPagamento(clienteId, valor, descricaoPagamento, dataAjustada);
     setValorPagamento('');
     setDescricaoPagamento('');
     setDataVencimentoPagamento(undefined);
@@ -166,7 +178,8 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
   
   const handleSalvarDataVencimento = () => {
     if (novaDataVencimento) {
-      atualizarDataVencimento(clienteId, novaDataVencimento);
+      const dataAjustada = ajustarDataTimezone(novaDataVencimento);
+      atualizarDataVencimento(clienteId, dataAjustada);
       setForceUpdate(prev => prev + 1);
     }
     setEditandoDataVencimento(false);
@@ -232,7 +245,8 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
   const handleSelectDataVencimento = (date: Date | undefined) => {
     if (date) {
       setNovaDataVencimento(date);
-      atualizarDataVencimento(clienteId, date);
+      const dataAjustada = ajustarDataTimezone(date);
+      atualizarDataVencimento(clienteId, dataAjustada);
       setForceUpdate(prev => prev + 1);
       setEditandoDataVencimento(false);
     }
