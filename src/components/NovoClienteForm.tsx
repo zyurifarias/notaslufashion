@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useClientes } from '@/contexts/ClienteContext';
@@ -26,11 +25,8 @@ const NovoClienteForm: React.FC = () => {
   const { adicionarCliente } = useClientes();
   const navigate = useNavigate();
 
-  // Função para ajustar o fuso horário da data
   const ajustarDataTimezone = (data: Date): Date => {
-    // Cria uma nova data com o mesmo dia, mês e ano, mas às 12:00 no horário local
     const dataAjustada = new Date(data);
-    // Certifica-se de que estamos usando meio-dia para evitar problemas com DST
     dataAjustada.setHours(12, 0, 0, 0);
     return dataAjustada;
   };
@@ -39,27 +35,23 @@ const NovoClienteForm: React.FC = () => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Converter para número e verificar se é válido
     const valor = parseFloat(valorNota.replace(',', '.'));
     
     if (!nome.trim()) {
       setIsLoading(false);
-      return; // Validação feita no contexto
+      return;
     }
     
     try {
-      // Ajustar a data de vencimento para corrigir o problema de fuso horário
       const dataAjustada = ajustarDataTimezone(dataVencimento);
       
       const novoClienteId = await adicionarCliente(nome.trim(), valor, dataAjustada, telefone);
       
-      // Limpar formulário
       setNome('');
       setValorNota('');
       setTelefone('');
       setDataVencimento(new Date());
       
-      // Redirecionar para a página de gerenciamento do cliente
       if (novoClienteId) {
         navigate(`/cliente/${novoClienteId}`);
       }
@@ -70,7 +62,6 @@ const NovoClienteForm: React.FC = () => {
     }
   };
 
-  // Função para formatar telefone: (99) 99999-9999
   const formatarTelefone = (value: string) => {
     const numbers = value.replace(/\D/g, '');
     
@@ -93,7 +84,6 @@ const NovoClienteForm: React.FC = () => {
 
   const handleTelefoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value;
-    // Remover todos os caracteres que não são números
     const numbersOnly = input.replace(/\D/g, '');
     
     if (numbersOnly.length <= 11) {
@@ -101,13 +91,12 @@ const NovoClienteForm: React.FC = () => {
     }
   };
 
-  // Função para lidar com a seleção de data - ajustada para resolver o problema
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
-      // Cria uma nova data sem alterar o objeto original
       const newDate = new Date(date);
+      newDate.setDate(newDate.getDate() + 1);
       setDataVencimento(newDate);
-      setCalendarOpen(false); // Fechar o calendário após selecionar a data
+      setCalendarOpen(false);
     }
   };
 
@@ -159,7 +148,6 @@ const NovoClienteForm: React.FC = () => {
               type="text"
               value={valorNota}
               onChange={(e) => {
-                // Permitir apenas números e vírgula
                 const value = e.target.value.replace(/[^\d,]/g, '');
                 setValorNota(value);
               }}

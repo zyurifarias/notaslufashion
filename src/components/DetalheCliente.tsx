@@ -257,6 +257,7 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
   const handleSelectDataVencimentoAdicao = (date: Date | undefined) => {
     if (date) {
       const newDate = new Date(date);
+      newDate.setDate(newDate.getDate() + 1); // Adiciona 1 dia à data selecionada
       setDataVencimentoAdicao(newDate);
     }
     setPopoverAdicaoAberto(false);
@@ -265,6 +266,7 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
   const handleSelectDataVencimentoPagamento = (date: Date | undefined) => {
     if (date) {
       const newDate = new Date(date);
+      newDate.setDate(newDate.getDate() + 1); // Adiciona 1 dia à data selecionada
       setDataVencimentoPagamento(newDate);
     }
     setPopoverPagamentoAberto(false);
