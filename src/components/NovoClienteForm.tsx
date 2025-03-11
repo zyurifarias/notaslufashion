@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useClientes } from '@/contexts/ClienteContext';
@@ -43,7 +44,10 @@ const NovoClienteForm: React.FC = () => {
     }
     
     try {
-      const dataAjustada = ajustarDataTimezone(dataVencimento);
+      // Criar uma nova data para adicionar 1 dia antes de salvar
+      const dataSalvar = new Date(dataVencimento);
+      dataSalvar.setDate(dataSalvar.getDate() + 1);
+      const dataAjustada = ajustarDataTimezone(dataSalvar);
       
       const novoClienteId = await adicionarCliente(nome.trim(), valor, dataAjustada, telefone);
       
@@ -93,8 +97,8 @@ const NovoClienteForm: React.FC = () => {
 
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
+      // Atualizar a interface com a data selecionada sem adicionar o dia extra
       const newDate = new Date(date);
-      newDate.setDate(newDate.getDate() + 1);
       setDataVencimento(newDate);
       setCalendarOpen(false);
     }

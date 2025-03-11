@@ -132,7 +132,12 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
   const handleAdicionarValor = () => {
     const valor = parseFloat(valorAdicao.replace(',', '.'));
     
-    const dataAjustada = dataVencimentoAdicao ? ajustarDataTimezone(dataVencimentoAdicao) : undefined;
+    let dataAjustada;
+    if (dataVencimentoAdicao) {
+      const dataSalvar = new Date(dataVencimentoAdicao);
+      dataSalvar.setDate(dataSalvar.getDate() + 1);
+      dataAjustada = ajustarDataTimezone(dataSalvar);
+    }
     
     adicionarValorNota(clienteId, valor, descricaoAdicao, dataAjustada);
     setValorAdicao('');
@@ -143,7 +148,12 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
   const handleRegistrarPagamento = () => {
     const valor = parseFloat(valorPagamento.replace(',', '.'));
     
-    const dataAjustada = dataVencimentoPagamento ? ajustarDataTimezone(dataVencimentoPagamento) : undefined;
+    let dataAjustada;
+    if (dataVencimentoPagamento) {
+      const dataSalvar = new Date(dataVencimentoPagamento);
+      dataSalvar.setDate(dataSalvar.getDate() + 1);
+      dataAjustada = ajustarDataTimezone(dataSalvar);
+    }
     
     registrarPagamento(clienteId, valor, descricaoPagamento, dataAjustada);
     setValorPagamento('');
@@ -257,7 +267,6 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
   const handleSelectDataVencimentoAdicao = (date: Date | undefined) => {
     if (date) {
       const newDate = new Date(date);
-      newDate.setDate(newDate.getDate() + 1); // Adiciona 1 dia à data selecionada
       setDataVencimentoAdicao(newDate);
     }
     setPopoverAdicaoAberto(false);
@@ -266,7 +275,6 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
   const handleSelectDataVencimentoPagamento = (date: Date | undefined) => {
     if (date) {
       const newDate = new Date(date);
-      newDate.setDate(newDate.getDate() + 1); // Adiciona 1 dia à data selecionada
       setDataVencimentoPagamento(newDate);
     }
     setPopoverPagamentoAberto(false);
