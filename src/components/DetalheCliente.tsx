@@ -244,8 +244,10 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
   
   const handleSelectDataVencimento = (date: Date | undefined) => {
     if (date) {
-      const dataAjustada = ajustarDataTimezone(date);
-      setNovaDataVencimento(date);
+      const newDate = new Date(date);
+      setNovaDataVencimento(newDate);
+      
+      const dataAjustada = ajustarDataTimezone(newDate);
       atualizarDataVencimento(clienteId, dataAjustada);
       setForceUpdate(prev => prev + 1);
       setEditandoDataVencimento(false);
@@ -254,18 +256,16 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
   
   const handleSelectDataVencimentoAdicao = (date: Date | undefined) => {
     if (date) {
-      const adjustedDate = new Date(date);
-      adjustedDate.setHours(12, 0, 0, 0);
-      setDataVencimentoAdicao(adjustedDate);
+      const newDate = new Date(date);
+      setDataVencimentoAdicao(newDate);
     }
     setPopoverAdicaoAberto(false);
   };
   
   const handleSelectDataVencimentoPagamento = (date: Date | undefined) => {
     if (date) {
-      const adjustedDate = new Date(date);
-      adjustedDate.setHours(12, 0, 0, 0);
-      setDataVencimentoPagamento(adjustedDate);
+      const newDate = new Date(date);
+      setDataVencimentoPagamento(newDate);
     }
     setPopoverPagamentoAberto(false);
   };

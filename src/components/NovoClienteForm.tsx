@@ -101,13 +101,12 @@ const NovoClienteForm: React.FC = () => {
     }
   };
 
-  // Função para lidar com a seleção de data - ajustada para resolver o problema de timezone
+  // Função para lidar com a seleção de data - ajustada para resolver o problema
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
-      // Ajusta para meio-dia para evitar problemas de timezone
-      const adjustedDate = new Date(date);
-      adjustedDate.setHours(12, 0, 0, 0);
-      setDataVencimento(adjustedDate);
+      // Cria uma nova data sem alterar o objeto original
+      const newDate = new Date(date);
+      setDataVencimento(newDate);
       setCalendarOpen(false); // Fechar o calendário após selecionar a data
     }
   };
