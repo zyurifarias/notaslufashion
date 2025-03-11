@@ -51,12 +51,12 @@ const NovoClienteForm: React.FC = () => {
       
       const novoClienteId = await adicionarCliente(nome.trim(), valor, dataAjustada, telefone);
       
-      setNome('');
-      setValorNota('');
-      setTelefone('');
-      setDataVencimento(new Date());
-      
       if (novoClienteId) {
+        setNome('');
+        setValorNota('');
+        setTelefone('');
+        setDataVencimento(new Date());
+        
         navigate(`/cliente/${novoClienteId}`);
       }
     } catch (error) {

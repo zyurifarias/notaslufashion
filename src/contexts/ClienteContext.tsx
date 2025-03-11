@@ -172,11 +172,27 @@ export const ClienteProvider: React.FC<{ children: React.ReactNode }> = ({ child
       return undefined;
     }
     
-    const dataVenc = dataVencimento || new Date();
-    // Garantir que a data está ajustada para meio-dia para evitar problemas de timezone
-    const dataFormatada = formatarDataParaSupabase(dataVenc);
+    // Verificar se já existe um cliente com o mesmo nome
+    const nomeNormalizado = nome.trim().toLowerCase();
     
     try {
+      // Verificar no Supabase se já existe um cliente com este nome
+      const { data: clientesExistentes, error: errorBusca } = await supabase
+        .from('clientes')
+        .select('id, nome')
+        .ilike('nome', nomeNormalizado);
+      
+      if (errorBusca) throw errorBusca;
+      
+      if (clientesExistentes && clientesExistentes.length > 0) {
+        toast.error(`Já existe um cliente com o nome "${nome}"`);
+        return undefined;
+      }
+      
+      const dataVenc = dataVencimento || new Date();
+      // Garantir que a data está ajustada para meio-dia para evitar problemas de timezone
+      const dataFormatada = formatarDataParaSupabase(dataVenc);
+      
       const { data: clienteData, error: clienteError } = await supabase
         .from('clientes')
         .insert([{
@@ -213,6 +229,13 @@ export const ClienteProvider: React.FC<{ children: React.ReactNode }> = ({ child
     } catch (error) {
       console.error('Erro ao adicionar cliente:', error);
       toast.error("Erro ao adicionar cliente. Por favor, tente novamente.");
+      
+      // Verificar em memória se já existe um cliente com este nome
+      const clienteExistente = clientes.find(c => c.nome.toLowerCase() === nomeNormalizado);
+      if (clienteExistente) {
+        toast.error(`Já existe um cliente com o nome "${nome}"`);
+        return undefined;
+      }
       
       const novoClienteId = uuidv4();
       const novoCliente: Cliente = {
