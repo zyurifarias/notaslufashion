@@ -28,9 +28,9 @@ const NovoClienteForm: React.FC = () => {
 
   // Função para ajustar o fuso horário da data
   const ajustarDataTimezone = (data: Date): Date => {
-    // Cria uma nova data sem ajustes de timezone
+    // Cria uma nova data com o mesmo dia, mês e ano, mas às 12:00 no horário local
     const dataAjustada = new Date(data);
-    // Define hora, minutos, segundos e milisegundos para meio dia para evitar problemas com DST
+    // Certifica-se de que estamos usando meio-dia para evitar problemas com DST
     dataAjustada.setHours(12, 0, 0, 0);
     return dataAjustada;
   };
@@ -101,10 +101,13 @@ const NovoClienteForm: React.FC = () => {
     }
   };
 
-  // Função para lidar com a seleção de data 
+  // Função para lidar com a seleção de data - ajustada para resolver o problema de timezone
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
-      setDataVencimento(date);
+      // Ajusta para meio-dia para evitar problemas de timezone
+      const adjustedDate = new Date(date);
+      adjustedDate.setHours(12, 0, 0, 0);
+      setDataVencimento(adjustedDate);
       setCalendarOpen(false); // Fechar o calendário após selecionar a data
     }
   };

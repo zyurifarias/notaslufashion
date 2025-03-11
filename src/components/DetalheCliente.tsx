@@ -244,8 +244,8 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
   
   const handleSelectDataVencimento = (date: Date | undefined) => {
     if (date) {
-      setNovaDataVencimento(date);
       const dataAjustada = ajustarDataTimezone(date);
+      setNovaDataVencimento(date);
       atualizarDataVencimento(clienteId, dataAjustada);
       setForceUpdate(prev => prev + 1);
       setEditandoDataVencimento(false);
@@ -253,12 +253,20 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
   };
   
   const handleSelectDataVencimentoAdicao = (date: Date | undefined) => {
-    setDataVencimentoAdicao(date);
+    if (date) {
+      const adjustedDate = new Date(date);
+      adjustedDate.setHours(12, 0, 0, 0);
+      setDataVencimentoAdicao(adjustedDate);
+    }
     setPopoverAdicaoAberto(false);
   };
   
   const handleSelectDataVencimentoPagamento = (date: Date | undefined) => {
-    setDataVencimentoPagamento(date);
+    if (date) {
+      const adjustedDate = new Date(date);
+      adjustedDate.setHours(12, 0, 0, 0);
+      setDataVencimentoPagamento(adjustedDate);
+    }
     setPopoverPagamentoAberto(false);
   };
   
@@ -269,7 +277,7 @@ const DetalheCliente: React.FC<DetalheClienteProps> = ({ clienteId }) => {
     
     doc.setFontSize(20);
     doc.setTextColor(0, 0, 0);
-    doc.text("Comprovante de Nota LuFashion", 105, 20, { align: "center" });
+    doc.text("Comprovante de Nota", 105, 20, { align: "center" });
     
     doc.setFontSize(14);
     doc.setTextColor(0, 0, 0);

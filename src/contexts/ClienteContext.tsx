@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Cliente, Transacao, EstatisticasGerais } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
@@ -37,13 +38,16 @@ export const ClienteProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [filtroNome, setFiltroNome] = useState('');
   
+  // Função para ajustar o fuso horário da data - corrigida para evitar o problema de -1 dia
   const ajustarDataTimezone = (data: Date): Date => {
+    // Cria uma nova data com o mesmo dia, mês e ano, mas às 12:00 no horário local
     const dataAjustada = new Date(data);
     dataAjustada.setHours(12, 0, 0, 0);
     return dataAjustada;
   };
   
   const formatarDataParaSupabase = (data: Date): string => {
+    // Garantir que a data está ajustada para meio-dia para evitar problemas de timezone
     return ajustarDataTimezone(data).toISOString().split('T')[0];
   };
   
@@ -169,6 +173,7 @@ export const ClienteProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
     
     const dataVenc = dataVencimento || new Date();
+    // Garantir que a data está ajustada para meio-dia para evitar problemas de timezone
     const dataFormatada = formatarDataParaSupabase(dataVenc);
     
     try {
@@ -236,6 +241,7 @@ export const ClienteProvider: React.FC<{ children: React.ReactNode }> = ({ child
   
   const atualizarDataVencimento = async (clienteId: string, novaDataVencimento: Date) => {
     try {
+      // Garantir que a data está ajustada para meio-dia para evitar problemas de timezone
       const dataFormatada = formatarDataParaSupabase(novaDataVencimento);
       
       const { error } = await supabase
@@ -411,6 +417,7 @@ export const ClienteProvider: React.FC<{ children: React.ReactNode }> = ({ child
       };
       
       if (novaDataVencimento) {
+        // Garantir que a data está ajustada para meio-dia para evitar problemas de timezone
         updateData.data_vencimento = formatarDataParaSupabase(novaDataVencimento);
       }
       
@@ -490,6 +497,7 @@ export const ClienteProvider: React.FC<{ children: React.ReactNode }> = ({ child
       };
       
       if (novaDataVencimento) {
+        // Garantir que a data está ajustada para meio-dia para evitar problemas de timezone
         updateData.data_vencimento = formatarDataParaSupabase(novaDataVencimento);
       }
       
