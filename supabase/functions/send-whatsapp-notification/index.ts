@@ -12,7 +12,7 @@ interface NotificationPayload {
   dataVencimento: string;
   valorTotal: number;
   valorPendente: number;
-  telefone?: string;
+  telefone?: string; // We'll keep this in the payload but won't use it for sending
 }
 
 serve(async (req) => {
@@ -22,7 +22,7 @@ serve(async (req) => {
   }
 
   try {
-    const { clienteNome, dataVencimento, valorTotal, valorPendente, telefone } = await req.json() as NotificationPayload;
+    const { clienteNome, dataVencimento, valorTotal, valorPendente } = await req.json() as NotificationPayload;
     
     // Format the values as Brazilian currency (R$)
     const formatarValor = (valor: number) => {
@@ -32,11 +32,8 @@ serve(async (req) => {
       }).format(valor);
     };
 
-    // Default notification phone number
-    const defaultPhone = "77981088587";
-    
-    // Use cliente's phone if available, otherwise use default
-    const phoneNumber = telefone ? telefone.replace(/\D/g, '') : defaultPhone;
+    // Always use the store owner's phone number
+    const storeOwnerPhone = "77981088587";
     
     // Format the date to Brazilian format
     const dataFormatada = new Date(dataVencimento).toLocaleDateString('pt-BR');
@@ -44,7 +41,7 @@ serve(async (req) => {
     // Create WhatsApp message
     const message = `*Notificação de Vencimento* 📣\n\n*Cliente:* ${clienteNome}\n*Data de Vencimento:* ${dataFormatada}\n*Valor Total:* ${formatarValor(valorTotal)}\n*Valor Pendente:* ${formatarValor(valorPendente)}`;
     
-    console.log(`Sending WhatsApp notification to ${phoneNumber} for client ${clienteNome}`);
+    console.log(`Sending WhatsApp notification to store owner (${storeOwnerPhone}) about client ${clienteNome}`);
     console.log(`Message: ${message}`);
     
     // In a real implementation, you would integrate with the WhatsApp Business API 
@@ -61,7 +58,7 @@ serve(async (req) => {
         'Authorization': 'Bearer YOUR_API_KEY'
       },
       body: JSON.stringify({
-        phone: phoneNumber,
+        phone: storeOwnerPhone,
         message: message
       })
     });
@@ -77,14 +74,14 @@ serve(async (req) => {
     const apiData = {
       success: true,
       messageSent: true,
-      to: phoneNumber
+      to: storeOwnerPhone
     };
     
     return new Response(
       JSON.stringify({
         success: true,
         data: apiData,
-        message: "WhatsApp notification sent successfully"
+        message: "WhatsApp notification sent successfully to store owner"
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
