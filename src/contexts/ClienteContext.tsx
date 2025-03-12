@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Cliente, Transacao, EstatisticasGerais } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
@@ -38,16 +37,13 @@ export const ClienteProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [filtroNome, setFiltroNome] = useState('');
   
-  // Função para ajustar o fuso horário da data - corrigida para evitar o problema de -1 dia
   const ajustarDataTimezone = (data: Date): Date => {
-    // Cria uma nova data com o mesmo dia, mês e ano, mas às 12:00 no horário local
     const dataAjustada = new Date(data);
     dataAjustada.setHours(12, 0, 0, 0);
     return dataAjustada;
   };
   
   const formatarDataParaSupabase = (data: Date): string => {
-    // Garantir que a data está ajustada para meio-dia para evitar problemas de timezone
     return ajustarDataTimezone(data).toISOString().split('T')[0];
   };
   
@@ -166,17 +162,50 @@ export const ClienteProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return dataA - dataB;
   });
   
+  const enviarNotificacaoWhatsApp = async (cliente: Cliente) => {
+    try {
+      const { error } = await supabase.functions.invoke('send-whatsapp-notification', {
+        body: {
+          clienteNome: cliente.nome,
+          dataVencimento: cliente.dataVencimento ? cliente.dataVencimento.toISOString() : new Date().toISOString(),
+          valorTotal: cliente.totalNota,
+          valorPendente: cliente.valorPendente,
+          telefone: cliente.telefone
+        }
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      console.log(`Notificação de WhatsApp enviada para ${cliente.nome}`);
+      
+    } catch (error) {
+      console.error('Erro ao enviar notificação de WhatsApp:', error);
+    }
+  };
+  
+  useEffect(() => {
+    const verificarNotasVencidas = async () => {
+      if (clientesVencidos.length > 0) {
+        for (const cliente of clientesVencidos) {
+          await enviarNotificacaoWhatsApp(cliente);
+        }
+      }
+    };
+    
+    verificarNotasVencidas();
+  }, [clientesVencidos]);
+  
   const adicionarCliente = async (nome: string, valorNota: number, dataVencimento?: Date, telefone?: string) => {
     if (!nome || valorNota <= 0) {
       toast.error("Por favor, preencha o nome e um valor válido.");
       return undefined;
     }
     
-    // Verificar se já existe um cliente com o mesmo nome
     const nomeNormalizado = nome.trim().toLowerCase();
     
     try {
-      // Verificar no Supabase se já existe um cliente com este nome
       const { data: clientesExistentes, error: errorBusca } = await supabase
         .from('clientes')
         .select('id, nome')
@@ -190,7 +219,6 @@ export const ClienteProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
       
       const dataVenc = dataVencimento || new Date();
-      // Garantir que a data está ajustada para meio-dia para evitar problemas de timezone
       const dataFormatada = formatarDataParaSupabase(dataVenc);
       
       const { data: clienteData, error: clienteError } = await supabase
@@ -230,7 +258,6 @@ export const ClienteProvider: React.FC<{ children: React.ReactNode }> = ({ child
       console.error('Erro ao adicionar cliente:', error);
       toast.error("Erro ao adicionar cliente. Por favor, tente novamente.");
       
-      // Verificar em memória se já existe um cliente com este nome
       const clienteExistente = clientes.find(c => c.nome.toLowerCase() === nomeNormalizado);
       if (clienteExistente) {
         toast.error(`Já existe um cliente com o nome "${nome}"`);
@@ -264,7 +291,6 @@ export const ClienteProvider: React.FC<{ children: React.ReactNode }> = ({ child
   
   const atualizarDataVencimento = async (clienteId: string, novaDataVencimento: Date) => {
     try {
-      // Garantir que a data está ajustada para meio-dia para evitar problemas de timezone
       const dataFormatada = formatarDataParaSupabase(novaDataVencimento);
       
       const { error } = await supabase
@@ -440,7 +466,6 @@ export const ClienteProvider: React.FC<{ children: React.ReactNode }> = ({ child
       };
       
       if (novaDataVencimento) {
-        // Garantir que a data está ajustada para meio-dia para evitar problemas de timezone
         updateData.data_vencimento = formatarDataParaSupabase(novaDataVencimento);
       }
       
@@ -520,7 +545,6 @@ export const ClienteProvider: React.FC<{ children: React.ReactNode }> = ({ child
       };
       
       if (novaDataVencimento) {
-        // Garantir que a data está ajustada para meio-dia para evitar problemas de timezone
         updateData.data_vencimento = formatarDataParaSupabase(novaDataVencimento);
       }
       
