@@ -2,18 +2,19 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 // Define the authentication context type
 interface AuthContextType {
   isAuthenticated: boolean;
-  login: (username: string, password: string) => boolean;
+  login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
 }
 
 // Create the context with default values
 const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
-  login: () => false,
+  login: async () => false,
   logout: () => {},
 });
 
@@ -33,22 +34,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  // Login function to authenticate user
-  const login = (username: string, password: string): boolean => {
-    // Hardcoded credentials as requested
-    if (username === 'luana' && password === 'adminlufashion') {
-      setIsAuthenticated(true);
-      // Save session in localStorage
-      localStorage.setItem('lufashion_auth', 'true');
-      toast({
-        title: "Login realizado com sucesso",
-        description: "Bem-vinda ao sistema de gerenciamento LuFashion!",
+  // Login function to authenticate user against the database
+  const login = async (username: string, password: string): Promise<boolean> => {
+    try {
+      // Use the database function to check credentials
+      const { data, error } = await supabase.rpc('check_admin_credentials', {
+        p_username: username,
+        p_password: password
       });
-      return true;
-    } else {
+
+      if (error) {
+        console.error('Authentication error:', error);
+        toast({
+          title: "Erro de autenticação",
+          description: "Ocorreu um erro ao verificar suas credenciais.",
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      if (data) {
+        setIsAuthenticated(true);
+        // Save session in localStorage
+        localStorage.setItem('lufashion_auth', 'true');
+        toast({
+          title: "Login realizado com sucesso",
+          description: "Bem-vinda ao sistema de gerenciamento LuFashion!",
+        });
+        return true;
+      } else {
+        toast({
+          title: "Erro de autenticação",
+          description: "Usuário ou senha incorretos.",
+          variant: "destructive",
+        });
+        return false;
+      }
+    } catch (error) {
+      console.error('Login error:', error);
       toast({
-        title: "Erro de autenticação",
-        description: "Usuário ou senha incorretos.",
+        title: "Erro de sistema",
+        description: "Não foi possível conectar-se ao servidor.",
         variant: "destructive",
       });
       return false;
