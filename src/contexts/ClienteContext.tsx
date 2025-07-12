@@ -70,7 +70,8 @@ export const ClienteProvider: React.FC<{ children: React.ReactNode }> = ({ child
             descricao: t.descricao
           })).sort((a: any, b: any) => b.data.getTime() - a.data.getTime());
           
-          const valorTotal = transacoesFormatadas
+          // CALCULAR valores com base nas transações REAIS
+          const totalNota = transacoesFormatadas
             .filter(t => t.tipo === 'adicao')
             .reduce((sum, t) => sum + t.valor, 0);
           
@@ -78,12 +79,31 @@ export const ClienteProvider: React.FC<{ children: React.ReactNode }> = ({ child
             .filter(t => t.tipo === 'pagamento')
             .reduce((sum, t) => sum + t.valor, 0);
           
+          const valorPendente = totalNota - valorAbatido;
+
+          // Atualizar o banco com os valores corretos (async sem await para não bloquear)
+          if (cliente.total_nota !== totalNota || cliente.valor_abatido !== valorAbatido || cliente.valor_pendente !== valorPendente) {
+            supabase
+              .from('clientes')
+              .update({
+                total_nota: totalNota,
+                valor_abatido: valorAbatido,
+                valor_pendente: valorPendente
+              })
+              .eq('id', cliente.id)
+              .then(({ error }) => {
+                if (error) {
+                  console.error('Erro ao atualizar valores recalculados:', error);
+                }
+              });
+          }
+          
           return {
             id: cliente.id,
             nome: cliente.nome,
-            totalNota: cliente.total_nota,
-            valorPendente: cliente.valor_pendente,
-            valorAbatido: cliente.valor_abatido,
+            totalNota: totalNota, // USAR valor calculado
+            valorPendente: valorPendente, // USAR valor calculado  
+            valorAbatido: valorAbatido, // USAR valor calculado
             transacoes: transacoesFormatadas,
             dataVencimento: cliente.data_vencimento ? new Date(cliente.data_vencimento) : new Date(),
             telefone: cliente.telefone
